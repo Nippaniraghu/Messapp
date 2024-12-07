@@ -162,7 +162,9 @@ class _Pages3State extends State<Pages3> {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (context) => const Details(),
+                          builder: (context) => const Details(
+                            item: {},
+                          ),
                         ),
                       );
                     },

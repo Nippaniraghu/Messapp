@@ -10,27 +10,26 @@ class Order extends StatefulWidget {
 
 class _OrderPageState extends State<Order> {
   int totalPrice = 0;
-  int finalAmount = 0;
 
   // Dummy cart data
-  final List<Map<String, String>> dummyCart = [
+  final List<Map<String, dynamic>> dummyCart = [
     {
       "Name": "Veg Thali",
-      "Quantity": "2",
-      "Image": "https://via.placeholder.com/90",
-      "Total": "20"
+      "Quantity": 1,
+      "Image": "images/salad2.png", // Updated image reference
+      "Price": 10
     },
     {
       "Name": "Curd Rice",
-      "Quantity": "1",
-      "Image": "https://via.placeholder.com/90",
-      "Total": "10"
+      "Quantity": 1,
+      "Image": "images/salad4.png", // Updated image reference
+      "Price": 10
     },
     {
       "Name": "Pasta",
-      "Quantity": "3",
-      "Image": "https://via.placeholder.com/90",
-      "Total": "30"
+      "Quantity": 1,
+      "Image": "images/burger.png", // Updated image reference
+      "Price": 15
     },
   ];
 
@@ -43,12 +42,27 @@ class _OrderPageState extends State<Order> {
   void _calculateTotal() {
     totalPrice = dummyCart.fold(
       0,
-      (sum, item) => sum + int.parse(item["Total"]!),
+      (sum, item) => sum + (item["Quantity"] as int) * (item["Price"] as int),
     );
-    finalAmount = totalPrice;
   }
 
-  Widget _buildCartItem(Map<String, String> item) {
+  void _increaseQuantity(int index) {
+    setState(() {
+      dummyCart[index]["Quantity"] += 1;
+      _calculateTotal();
+    });
+  }
+
+  void _decreaseQuantity(int index) {
+    setState(() {
+      if (dummyCart[index]["Quantity"] > 1) {
+        dummyCart[index]["Quantity"] -= 1;
+        _calculateTotal();
+      }
+    });
+  }
+
+  Widget _buildCartItem(Map<String, dynamic> item, int index) {
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 10.0),
       child: Material(
@@ -57,37 +71,52 @@ class _OrderPageState extends State<Order> {
         child: Padding(
           padding: const EdgeInsets.all(10.0),
           child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Container(
-                height: 90,
-                width: 40,
-                decoration: BoxDecoration(
-                  border: Border.all(),
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: Center(child: Text(item["Quantity"]!)),
-              ),
-              const SizedBox(width: 20.0),
               ClipRRect(
-                borderRadius: BorderRadius.circular(60),
-                child: Image.network(
-                  item["Image"]!,
+                borderRadius: BorderRadius.circular(10),
+                child: Image.asset(
+                  item["Image"],
                   height: 90,
                   width: 90,
                   fit: BoxFit.cover,
                 ),
               ),
               const SizedBox(width: 20.0),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      item["Name"],
+                      style: AppWidget.semiBoldTextFeildStyle(),
+                    ),
+                    const SizedBox(height: 5.0),
+                    Text(
+                      "Price: \$${item["Price"]}",
+                      style: AppWidget.LightTextFeildStyle(),
+                    ),
+                    const SizedBox(height: 5.0),
+                    Text(
+                      "Subtotal: \$${item["Price"] * item["Quantity"]}",
+                      style: AppWidget.semiBoldTextFeildStyle(),
+                    ),
+                  ],
+                ),
+              ),
+              Row(
                 children: [
-                  Text(
-                    item["Name"]!,
-                    style: AppWidget.semiBoldTextFeildStyle(),
+                  IconButton(
+                    onPressed: () => _decreaseQuantity(index),
+                    icon: const Icon(Icons.remove_circle_outline),
                   ),
                   Text(
-                    "\$${item["Total"]}",
-                    style: AppWidget.semiBoldTextFeildStyle(),
+                    item["Quantity"].toString(),
+                    style: AppWidget.boldTextFeildStyle(),
+                  ),
+                  IconButton(
+                    onPressed: () => _increaseQuantity(index),
+                    icon: const Icon(Icons.add_circle_outline),
                   ),
                 ],
               ),
@@ -104,7 +133,7 @@ class _OrderPageState extends State<Order> {
       itemCount: dummyCart.length,
       shrinkWrap: true,
       itemBuilder: (context, index) {
-        return _buildCartItem(dummyCart[index]);
+        return _buildCartItem(dummyCart[index], index);
       },
     );
   }
@@ -112,7 +141,6 @@ class _OrderPageState extends State<Order> {
   void _handleCheckout() {
     setState(() {
       totalPrice = 0;
-      finalAmount = 0;
       dummyCart.clear();
     });
 
@@ -135,7 +163,14 @@ class _OrderPageState extends State<Order> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Expanded(
-              child: _buildFoodCart(),
+              child: dummyCart.isNotEmpty
+                  ? _buildFoodCart()
+                  : const Center(
+                      child: Text(
+                        "Your cart is empty!",
+                        style: TextStyle(fontSize: 18.0),
+                      ),
+                    ),
             ),
             const Divider(),
             Padding(

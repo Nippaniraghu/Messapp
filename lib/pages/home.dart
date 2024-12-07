@@ -1,10 +1,11 @@
-import 'package:collegeproject/pages/pages2.dart';
-import 'package:collegeproject/pages/pages3.dart';
+import 'package:collegeproject/pages/cart_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:collegeproject/pages/details.dart';
-import 'package:collegeproject/pages/page1.dart'; // Import Pages1
-// import 'package:collegeproject/pages/page2.dart'; // Import Pages2
-// import 'package:collegeproject/pages/page3.dart'; // Import Pages3
+import 'package:collegeproject/pages/page1.dart';
+import 'package:collegeproject/pages/pages2.dart';
+import 'package:collegeproject/pages/pages3.dart';
+import 'package:provider/provider.dart';
+import 'package:collegeproject/pages/cart_provider.dart';
 import 'package:collegeproject/widget/widget_support.dart';
 
 class Home extends StatefulWidget {
@@ -72,21 +73,21 @@ class _HomeState extends State<Home> {
       Navigator.push(
         context,
         MaterialPageRoute(
-          builder: (context) => Pages1(), // Navigate to Pages1
+          builder: (context) => const Pages1(), // Navigate to Page1
         ),
       );
     } else if (value == "Durga") {
       Navigator.push(
         context,
         MaterialPageRoute(
-          builder: (context) => Pages2(), // Navigate to Pages2
+          builder: (context) => const Pages2(), // Navigate to Pages2
         ),
       );
     } else if (value == "Shabari") {
       Navigator.push(
         context,
         MaterialPageRoute(
-          builder: (context) => Pages3(), // Navigate to Pages3
+          builder: (context) => const Pages3(), // Navigate to Pages3
         ),
       );
     } else {
@@ -153,6 +154,12 @@ class _HomeState extends State<Home> {
       appBar: AppBar(
         title: const Text("Welcome!"),
         actions: [
+          IconButton(
+            icon: const Icon(Icons.shopping_cart),
+            onPressed: () {
+              Navigator.pushNamed(context, '/order'); // Navigate to cart
+            },
+          ),
           Padding(
             padding: const EdgeInsets.only(right: 15.0),
             child: _buildHamburgerIcon(),
@@ -189,7 +196,7 @@ class _HomeState extends State<Home> {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (context) => const Details(),
+                          builder: (context) => Details(item: item),
                         ),
                       );
                     },
@@ -225,6 +232,21 @@ class _HomeState extends State<Home> {
                                     Text(item["price"]!,
                                         style:
                                             AppWidget.semiBoldTextFeildStyle()),
+                                    const SizedBox(height: 10.0),
+                                    ElevatedButton(
+                                      onPressed: () {
+                                        Provider.of<CartModel>(context,
+                                                listen: false)
+                                            .addItem(item);
+                                        ScaffoldMessenger.of(context)
+                                            .showSnackBar(
+                                          SnackBar(
+                                              content: Text(
+                                                  '${item["name"]} added to cart!')),
+                                        );
+                                      },
+                                      child: const Text("Add to Cart"),
+                                    ),
                                   ],
                                 ),
                               ),

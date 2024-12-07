@@ -39,6 +39,7 @@ dependencies:
   http: ^1.1.0
   shared_preferences: ^2.3.3
   firebase_storage: ^12.3.6
+  provider: ^6.1.2
   
     # upi_india: ^3.0.1
 

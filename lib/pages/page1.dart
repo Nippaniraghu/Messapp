@@ -1,7 +1,7 @@
 import 'package:collegeproject/pages/details.dart';
 import 'package:flutter/material.dart';
-import 'package:collegeproject/pages/pages2.dart'; // Import Pages2
-import 'package:collegeproject/pages/pages3.dart'; // Import Pages3
+import 'package:collegeproject/pages/pages2.dart';
+import 'package:collegeproject/pages/pages3.dart';
 import 'package:collegeproject/widget/widget_support.dart';
 
 class Pages1 extends StatefulWidget {
@@ -69,21 +69,21 @@ class _Pages1State extends State<Pages1> {
       Navigator.push(
         context,
         MaterialPageRoute(
-          builder: (context) => Pages1(), // Navigate to Pages1
+          builder: (context) => const Pages1(), // Navigate to Pages1
         ),
       );
     } else if (value == "Durga") {
       Navigator.push(
         context,
         MaterialPageRoute(
-          builder: (context) => Pages2(), // Navigate to Pages2
+          builder: (context) => const Pages2(), // Navigate to Pages2
         ),
       );
     } else if (value == "Shabari") {
       Navigator.push(
         context,
         MaterialPageRoute(
-          builder: (context) => Pages3(), // Navigate to Pages3
+          builder: (context) => const Pages3(), // Navigate to Pages3
         ),
       );
     } else {
@@ -158,11 +158,10 @@ class _Pages1State extends State<Pages1> {
       ),
       body: SingleChildScrollView(
         child: Container(
-          margin: const EdgeInsets.only(top: 20.0, left: 20.0, right: 20.0),
+          margin: const EdgeInsets.symmetric(vertical: 20.0, horizontal: 20.0),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const SizedBox(height: 20.0),
               Text("Food Explorer", style: AppWidget.HeadlineTextFeildStyle()),
               Text("Find Your Favorite Dishes",
                   style: AppWidget.LightTextFeildStyle()),
@@ -181,56 +180,69 @@ class _Pages1State extends State<Pages1> {
               ),
               const SizedBox(height: 20.0),
               // Display Items
-              ..._filteredItems.map((item) => GestureDetector(
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const Details(),
-                        ),
-                      );
-                    },
-                    child: Container(
-                      margin: const EdgeInsets.symmetric(vertical: 10.0),
-                      child: Material(
-                        elevation: 5.0,
-                        borderRadius: BorderRadius.circular(20),
-                        child: Container(
-                          padding: const EdgeInsets.all(14),
-                          child: Row(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Image.asset(
-                                item["image"]!,
-                                height: 120,
-                                width: 120,
-                                fit: BoxFit.cover,
+              _filteredItems.isNotEmpty
+                  ? Column(
+                      children: _filteredItems.map((item) {
+                        return GestureDetector(
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => Details(item: item),
                               ),
-                              const SizedBox(width: 20.0),
-                              Expanded(
-                                child: Column(
+                            );
+                          },
+                          child: Container(
+                            margin: const EdgeInsets.symmetric(vertical: 10.0),
+                            child: Material(
+                              elevation: 5.0,
+                              borderRadius: BorderRadius.circular(20),
+                              child: Container(
+                                padding: const EdgeInsets.all(14),
+                                child: Row(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    Text(item["name"]!,
-                                        style:
-                                            AppWidget.semiBoldTextFeildStyle(),
-                                        overflow: TextOverflow.ellipsis),
-                                    const SizedBox(height: 5.0),
-                                    Text(item["description"]!,
-                                        style: AppWidget.LightTextFeildStyle()),
-                                    const SizedBox(height: 5.0),
-                                    Text(item["price"]!,
-                                        style:
-                                            AppWidget.semiBoldTextFeildStyle()),
+                                    Image.asset(
+                                      item["image"]!,
+                                      height: 120,
+                                      width: 120,
+                                      fit: BoxFit.cover,
+                                    ),
+                                    const SizedBox(width: 20.0),
+                                    Expanded(
+                                      child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          Text(item["name"]!,
+                                              style: AppWidget
+                                                  .semiBoldTextFeildStyle(),
+                                              overflow: TextOverflow.ellipsis),
+                                          const SizedBox(height: 5.0),
+                                          Text(item["description"]!,
+                                              style: AppWidget
+                                                  .LightTextFeildStyle()),
+                                          const SizedBox(height: 5.0),
+                                          Text(item["price"]!,
+                                              style: AppWidget
+                                                  .semiBoldTextFeildStyle()),
+                                        ],
+                                      ),
+                                    ),
                                   ],
                                 ),
                               ),
-                            ],
+                            ),
                           ),
-                        ),
+                        );
+                      }).toList(),
+                    )
+                  : const Center(
+                      child: Text(
+                        "No items found",
+                        style: TextStyle(fontSize: 18.0),
                       ),
                     ),
-                  )),
             ],
           ),
         ),

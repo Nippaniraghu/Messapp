@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:collegeproject/widget/widget_support.dart';
 
 class Details extends StatefulWidget {
-  const Details({super.key});
+  const Details({super.key, required Map<String, String> item});
 
   @override
   State<Details> createState() => _DetailsState();

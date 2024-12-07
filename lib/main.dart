@@ -2,10 +2,13 @@ import 'package:collegeproject/admin/add_food.dart';
 import 'package:collegeproject/admin/admin_login.dart';
 import 'package:collegeproject/admin/home_admin.dart';
 import 'package:collegeproject/pages/bottomnav.dart';
+import 'package:collegeproject/pages/cart_provider.dart';
 import 'package:collegeproject/pages/home.dart';
 import 'package:collegeproject/pages/login.dart';
+import 'package:collegeproject/pages/order.dart';
 import 'package:collegeproject/pages/page1.dart';
 import 'package:collegeproject/pages/pages2.dart';
+import 'package:collegeproject/pages/profile.dart';
 import 'package:collegeproject/pages/signup.dart';
 import 'package:collegeproject/pages/wallet.dart';
 import 'package:firebase_core/firebase_core.dart';
@@ -13,6 +16,7 @@ import 'package:flutter/foundation.dart';
 // import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:collegeproject/pages/onboard.dart';
+import 'package:provider/provider.dart';
 
 void main() {
   if (kIsWeb) {
@@ -31,7 +35,12 @@ void main() {
 //   WidgetsFlutterBinding.ensureInitialized();
 //   await Firebase.initializeApp();
 
-  runApp(const MyApp());
+  runApp(
+    ChangeNotifierProvider(
+      create: (context) => CartModel(),
+      child: const MyApp(),
+    ),
+  );
 }
 
 class MyApp extends StatelessWidget {

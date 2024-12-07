@@ -9,7 +9,7 @@ class UnboardingContent {
 List<UnboardingContent> contents = [
   UnboardingContent(
       description: 'Pick your food from our menu\n          More than 35 times',
-      image: "collegeproject/images/screen1.png",
+      image: "images/screen1.png",
       title: 'Select from Our\n       Best Menu'),
   UnboardingContent(
       description:

@@ -1,5 +1,10 @@
+import 'package:collegeproject/pages/pages2.dart';
+import 'package:collegeproject/pages/pages3.dart';
 import 'package:flutter/material.dart';
 import 'package:collegeproject/pages/details.dart';
+import 'package:collegeproject/pages/page1.dart'; // Import Pages1
+// import 'package:collegeproject/pages/page2.dart'; // Import Pages2
+// import 'package:collegeproject/pages/page3.dart'; // Import Pages3
 import 'package:collegeproject/widget/widget_support.dart';
 
 class Home extends StatefulWidget {
@@ -16,7 +21,7 @@ class _HomeState extends State<Home> {
       "name": "Veggie Taco Hash",
       "description": "Fresh and Healthy",
       "price": "\$25",
-      "image": "images/salad2.png"
+      "image": "images/burger.png"
     },
     {
       "name": "Mix Veg Salad",
@@ -63,10 +68,32 @@ class _HomeState extends State<Home> {
   }
 
   void _onMenuOptionSelected(String value) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text("$value selected")),
-    );
-    // Add logic for specific option selection here if needed.
+    if (value == "GIT") {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => Pages1(), // Navigate to Pages1
+        ),
+      );
+    } else if (value == "Durga") {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => Pages2(), // Navigate to Pages2
+        ),
+      );
+    } else if (value == "Shabari") {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => Pages3(), // Navigate to Pages3
+        ),
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("$value selected")),
+      );
+    }
   }
 
   Widget _buildHamburgerIcon() {

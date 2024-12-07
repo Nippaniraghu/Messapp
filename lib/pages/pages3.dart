@@ -1,17 +1,15 @@
-import 'package:collegeproject/pages/details.dart';
 import 'package:flutter/material.dart';
-import 'package:collegeproject/pages/pages2.dart'; // Import Pages2
-import 'package:collegeproject/pages/pages3.dart'; // Import Pages3
+import 'package:collegeproject/pages/details.dart';
 import 'package:collegeproject/widget/widget_support.dart';
 
-class Pages1 extends StatefulWidget {
-  const Pages1({super.key});
+class Pages3 extends StatefulWidget {
+  const Pages3({super.key});
 
   @override
-  State<Pages1> createState() => _Pages1State();
+  State<Pages3> createState() => _Pages3State();
 }
 
-class _Pages1State extends State<Pages1> {
+class _Pages3State extends State<Pages3> {
   final TextEditingController _searchController = TextEditingController();
   final List<Map<String, String>> _items = [
     {
@@ -65,32 +63,10 @@ class _Pages1State extends State<Pages1> {
   }
 
   void _onMenuOptionSelected(String value) {
-    if (value == "GIT") {
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (context) => Pages1(), // Navigate to Pages1
-        ),
-      );
-    } else if (value == "Durga") {
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (context) => Pages2(), // Navigate to Pages2
-        ),
-      );
-    } else if (value == "Shabari") {
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (context) => Pages3(), // Navigate to Pages3
-        ),
-      );
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("$value selected")),
-      );
-    }
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text("$value selected")),
+    );
+    // Add logic for specific option selection here if needed.
   }
 
   Widget _buildHamburgerIcon() {
@@ -148,7 +124,7 @@ class _Pages1State extends State<Pages1> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text("KLS GIT"),
+        title: const Text("Welcome to Shabari Mess"),
         actions: [
           Padding(
             padding: const EdgeInsets.only(right: 15.0),

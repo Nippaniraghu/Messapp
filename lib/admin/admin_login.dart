@@ -161,29 +161,23 @@ class _AdminLoginState extends State<AdminLogin> {
     );
   }
 
-  LoginAdmin() {
-    FirebaseFirestore.instance.collection("Admin").get().then((snapshot) {
-      snapshot.docs.forEach((result) {
-        if (result.data()['id'] != usernamecontroller.text.trim()) {
-          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-              backgroundColor: Colors.orangeAccent,
-              content: Text(
-                "Your id is not correct",
-                style: TextStyle(fontSize: 18.0),
-              )));
-        } else if (result.data()['password'] !=
-            userpasswordcontroller.text.trim()) {
-          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-              backgroundColor: Colors.orangeAccent,
-              content: Text(
-                "Your password is not correct",
-                style: TextStyle(fontSize: 18.0),
-              )));
-        } else {
-          Route route = MaterialPageRoute(builder: (context) => AddFood());
-          Navigator.pushReplacement(context, route);
-        }
-      });
-    });
+  void LoginAdmin() {
+    final username = usernamecontroller.text.trim();
+    final password = userpasswordcontroller.text.trim();
+
+    if (username == 'admin' && password == 'admin') {
+      // Navigate to the AddFood page on successful login
+      Route route = MaterialPageRoute(builder: (context) => AddFood());
+      Navigator.pushReplacement(context, route);
+    } else {
+      // Show error message for incorrect credentials
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        backgroundColor: Colors.orangeAccent,
+        content: Text(
+          "Invalid username or password",
+          style: TextStyle(fontSize: 18.0),
+        ),
+      ));
+    }
   }
 }

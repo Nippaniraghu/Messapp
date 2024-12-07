@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:collegeproject/admin/admin_login.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:random_string/random_string.dart';
@@ -89,6 +90,34 @@ class _ProfileState extends State<Profile> {
                                         width: 120,
                                         fit: BoxFit.cover,
                                       ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                      Positioned(
+                        top: 20,
+                        right: 20,
+                        child: GestureDetector(
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                  builder: (context) => const AdminLogin()),
+                            );
+                          },
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 10.0, vertical: 5.0),
+                            decoration: BoxDecoration(
+                              color: Colors.red,
+                              borderRadius: BorderRadius.circular(8.0),
+                            ),
+                            child: const Text(
+                              "Admin",
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold,
                               ),
                             ),
                           ),

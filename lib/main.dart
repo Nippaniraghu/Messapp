@@ -4,6 +4,7 @@ import 'package:collegeproject/admin/home_admin.dart';
 import 'package:collegeproject/pages/bottomnav.dart';
 import 'package:collegeproject/pages/home.dart';
 import 'package:collegeproject/pages/login.dart';
+import 'package:collegeproject/pages/page1.dart';
 import 'package:collegeproject/pages/signup.dart';
 import 'package:collegeproject/pages/wallet.dart';
 import 'package:firebase_core/firebase_core.dart';
@@ -60,7 +61,7 @@ class MyApp extends StatelessWidget {
           colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
           useMaterial3: true,
         ),
-        home: const Onboard());
+        home: const pages1());
   }
 }
 

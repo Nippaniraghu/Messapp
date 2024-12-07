@@ -62,12 +62,79 @@ class _HomeState extends State<Home> {
     });
   }
 
+  void _onMenuOptionSelected(String value) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text("$value selected")),
+    );
+    // Add logic for specific option selection here if needed.
+  }
+
+  Widget _buildHamburgerIcon() {
+    return GestureDetector(
+      onTapDown: (details) {
+        showMenu(
+          context: context,
+          position: RelativeRect.fromLTRB(
+              details.globalPosition.dx, details.globalPosition.dy, 0, 0),
+          items: [
+            const PopupMenuItem<String>(
+              value: "GIT",
+              child: Text("GIT"),
+            ),
+            const PopupMenuItem<String>(
+              value: "Durga",
+              child: Text("Durga"),
+            ),
+            const PopupMenuItem<String>(
+              value: "Shabari",
+              child: Text("Shabari"),
+            ),
+          ],
+        ).then((value) {
+          if (value != null) _onMenuOptionSelected(value);
+        });
+      },
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Container(
+            height: 5.0,
+            width: 30.0,
+            color: Colors.black,
+            margin: const EdgeInsets.only(bottom: 4.0),
+          ),
+          Container(
+            height: 5.0,
+            width: 30.0,
+            color: Colors.black,
+            margin: const EdgeInsets.only(bottom: 4.0),
+          ),
+          Container(
+            height: 5.0,
+            width: 30.0,
+            color: Colors.black,
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: AppBar(
+        title: const Text("Welcome!"),
+        actions: [
+          Padding(
+            padding: const EdgeInsets.only(right: 15.0),
+            child: _buildHamburgerIcon(),
+          ),
+        ],
+      ),
       body: SingleChildScrollView(
         child: Container(
-          margin: const EdgeInsets.only(top: 50.0, left: 20.0, right: 20.0),
+          margin: const EdgeInsets.only(top: 20.0, left: 20.0, right: 20.0),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -93,9 +160,11 @@ class _HomeState extends State<Home> {
               ..._filteredItems.map((item) => GestureDetector(
                     onTap: () {
                       Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                              builder: (context) => const Details()));
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const Details(),
+                        ),
+                      );
                     },
                     child: Container(
                       margin: const EdgeInsets.symmetric(vertical: 10.0),

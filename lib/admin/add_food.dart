@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:random_string/random_string.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'pending_orders.dart'; // Ensure this import points to the PendingOrders file location.
 
 class AddFood extends StatefulWidget {
   const AddFood({super.key});
@@ -91,6 +92,27 @@ class _AddFoodState extends State<AddFood> {
             color: Colors.black,
           ),
         ),
+        actions: [
+          Container(
+            decoration: BoxDecoration(
+              border: Border.all(color: Colors.blueAccent, width: 2.0),
+              borderRadius: BorderRadius.circular(8.0),
+            ),
+            child: TextButton(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                      builder: (context) => const PendingOrders()),
+                );
+              },
+              child: Text(
+                "Orders",
+                style: TextStyle(fontSize: 16, color: Colors.blueAccent),
+              ),
+            ),
+          ),
+        ],
         backgroundColor: Colors.white,
       ),
       body: Stack(

@@ -1,6 +1,7 @@
 import 'package:collegeproject/admin/add_food.dart';
 import 'package:collegeproject/admin/admin_login.dart';
 import 'package:collegeproject/admin/home_admin.dart';
+import 'package:collegeproject/admin/pending_orders.dart';
 import 'package:collegeproject/pages/bottomnav.dart';
 import 'package:collegeproject/pages/cart_provider.dart';
 import 'package:collegeproject/pages/home.dart';
@@ -71,7 +72,7 @@ class MyApp extends StatelessWidget {
           colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
           useMaterial3: true,
         ),
-        home: const Onboard());
+        home: const AddFood());
   }
 }
 

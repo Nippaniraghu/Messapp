@@ -1,3 +1,5 @@
+import 'package:collegeproject/pages/page1.dart';
+import 'package:collegeproject/pages/pages2.dart';
 import 'package:flutter/material.dart';
 import 'package:collegeproject/pages/details.dart';
 import 'package:collegeproject/widget/widget_support.dart';
@@ -13,29 +15,58 @@ class _Pages3State extends State<Pages3> {
   final TextEditingController _searchController = TextEditingController();
   final List<Map<String, String>> _items = [
     {
-      "name": "Fruit Salad",
-      "description": "Refreshing and Juicy",
-      "price": "\$20",
-      "image": "images/burger.png"
+      "name": "Sheera (Kesari Bath)",
+      "description":
+          "Sweet semolina pudding flavored with saffron and cardamom.",
+      "price": "₹50",
+      "image": "images/sheera.jpg"
     },
     {
-      "name": "Greek Salad",
-      "description": "Tangy and Crunchy",
-      "price": "\$25",
-      "image": "images/salad4.png"
+      "name": "Vegetable Upma",
+      "description":
+          "Semolina cooked with mixed vegetables and tempered with curry leaves.",
+      "price": "₹60",
+      "image": "images/vegetable_upma.jpg"
     },
     {
-      "name": "Avocado Salad",
-      "description": "Healthy and Delicious",
-      "price": "\$30",
-      "image": "images/salad4.png"
+      "name": "Sabudana Khichdi",
+      "description":
+          "Tapioca pearls cooked with peanuts, potatoes, and a hint of lime.",
+      "price": "₹65",
+      "image": "images/sabudana_khicdi.jpg"
     },
     {
-      "name": "Caesar Salad",
-      "description": "Classic and Creamy",
-      "price": "\$22",
-      "image": "images/salad4.png"
+      "name": "Palak Poori with Aloo",
+      "description": "Deep-fried spinach bread served with spicy potato curry.",
+      "price": "₹70",
+      "image": "images/palak_puri_aalo.jpg"
     },
+    {
+      "name": "Pesarattu",
+      "description":
+          "Protein-rich green gram dosa paired with tangy ginger chutney.",
+      "price": "₹60",
+      "image": "images/pesarattu.jpg"
+    },
+    {
+      "name": "Tomato Bath",
+      "description": "Flavorful rice cooked with tomatoes and aromatic spices.",
+      "price": "₹50",
+      "image": "images/tomato_bath.jpg"
+    },
+    {
+      "name": "Medu Vada",
+      "description":
+          "Crispy lentil donuts served with coconut chutney and sambar.",
+      "price": "₹40",
+      "image": "images/medu_vada.jpeg"
+    },
+    {
+      "name": "Shrikhand",
+      "description": "Sweet and creamy yogurt dessert infused with cardamom.",
+      "price": "₹45",
+      "image": "images/shrikhand.jpg"
+    }
   ];
 
   List<Map<String, String>> _filteredItems = [];
@@ -63,9 +94,25 @@ class _Pages3State extends State<Pages3> {
   }
 
   void _onMenuOptionSelected(String value) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text("$value selected")),
-    );
+    if (value == "GIT") {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => const Pages1(), // Navigate to Pages1
+        ),
+      );
+    } else if (value == "Durga") {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => const Pages2(), // Navigate to Pages3
+        ),
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("$value selected")),
+      );
+    }
     // Add logic for specific option selection here if needed.
   }
 
@@ -162,8 +209,11 @@ class _Pages3State extends State<Pages3> {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (context) => const Details(
-                            item: {},
+                          builder: (context) => Details(
+                            name: item["name"]!,
+                            description: item["description"]!,
+                            price: item["price"]!,
+                            imagePath: item["image"]!,
                           ),
                         ),
                       );

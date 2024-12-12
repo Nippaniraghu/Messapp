@@ -1,7 +1,8 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:collegeproject/pages/details.dart';
 import 'package:flutter/material.dart';
-import 'package:collegeproject/pages/pages2.dart';
-import 'package:collegeproject/pages/pages3.dart';
+import 'package:collegeproject/pages/pages2.dart'; // Import Pages2
+import 'package:collegeproject/pages/pages3.dart'; // Import Pages3
 import 'package:collegeproject/widget/widget_support.dart';
 
 class Pages1 extends StatefulWidget {
@@ -13,39 +14,43 @@ class Pages1 extends StatefulWidget {
 
 class _Pages1State extends State<Pages1> {
   final TextEditingController _searchController = TextEditingController();
-  final List<Map<String, String>> _items = [
-    {
-      "name": "Fruit Salad",
-      "description": "Refreshing and Juicy",
-      "price": "\$20",
-      "image": "images/burger.png"
-    },
-    {
-      "name": "Greek Salad",
-      "description": "Tangy and Crunchy",
-      "price": "\$25",
-      "image": "images/salad4.png"
-    },
-    {
-      "name": "Avocado Salad",
-      "description": "Healthy and Delicious",
-      "price": "\$30",
-      "image": "images/salad4.png"
-    },
-    {
-      "name": "Caesar Salad",
-      "description": "Classic and Creamy",
-      "price": "\$22",
-      "image": "images/salad4.png"
-    },
-  ];
-
   List<Map<String, String>> _filteredItems = [];
+  List<Map<String, String>> _items = [];
 
   @override
   void initState() {
     super.initState();
-    _filteredItems = _items; // Initialize with all items.
+    _fetchMenuItems(); // Fetch the menu items when the page loads
+  }
+
+  void _fetchMenuItems() async {
+    try {
+      // Fetch the documents from the Firestore collection
+      QuerySnapshot snapshot = await FirebaseFirestore.instance
+          .collection('Admin')
+          .doc('git')
+          .collection('menu') // Your Firestore collection name
+          .get();
+
+      List<Map<String, String>> items = [];
+      for (var doc in snapshot.docs) {
+        // Assuming the document has fields 'name', 'description', 'price', and 'image'
+        Map<String, String> item = {
+          'name': doc['Name'],
+          'description': doc['Detail'],
+          'price': doc['Price'],
+          'image': doc['Image'], // You may need to store the image URL here
+        };
+        items.add(item);
+      }
+
+      setState(() {
+        _items = items;
+        _filteredItems = items; // Initialize filteredItems with all items
+      });
+    } catch (e) {
+      print("Error fetching menu items: $e");
+    }
   }
 
   void _searchItems(String query) {
@@ -65,14 +70,7 @@ class _Pages1State extends State<Pages1> {
   }
 
   void _onMenuOptionSelected(String value) {
-    if (value == "GIT") {
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (context) => const Pages1(), // Navigate to Pages1
-        ),
-      );
-    } else if (value == "Durga") {
+    if (value == "Durga") {
       Navigator.push(
         context,
         MaterialPageRoute(
@@ -158,10 +156,11 @@ class _Pages1State extends State<Pages1> {
       ),
       body: SingleChildScrollView(
         child: Container(
-          margin: const EdgeInsets.symmetric(vertical: 20.0, horizontal: 20.0),
+          margin: const EdgeInsets.only(top: 20.0, left: 20.0, right: 20.0),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              const SizedBox(height: 20.0),
               Text("Food Explorer", style: AppWidget.HeadlineTextFeildStyle()),
               Text("Find Your Favorite Dishes",
                   style: AppWidget.LightTextFeildStyle()),
@@ -180,69 +179,61 @@ class _Pages1State extends State<Pages1> {
               ),
               const SizedBox(height: 20.0),
               // Display Items
-              _filteredItems.isNotEmpty
-                  ? Column(
-                      children: _filteredItems.map((item) {
-                        return GestureDetector(
-                          onTap: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => Details(item: item),
+              ..._filteredItems.map((item) => GestureDetector(
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => Details(
+                            name: item["name"]!,
+                            description: item["description"]!,
+                            price: item["price"]!,
+                            imagePath: item["image"]!,
+                          ),
+                        ),
+                      );
+                    },
+                    child: Container(
+                      margin: const EdgeInsets.symmetric(vertical: 10.0),
+                      child: Material(
+                        elevation: 5.0,
+                        borderRadius: BorderRadius.circular(20),
+                        child: Container(
+                          padding: const EdgeInsets.all(14),
+                          child: Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Image.network(
+                                item["image"]!,
+                                height: 120,
+                                width: 120,
+                                fit: BoxFit.cover,
                               ),
-                            );
-                          },
-                          child: Container(
-                            margin: const EdgeInsets.symmetric(vertical: 10.0),
-                            child: Material(
-                              elevation: 5.0,
-                              borderRadius: BorderRadius.circular(20),
-                              child: Container(
-                                padding: const EdgeInsets.all(14),
-                                child: Row(
+                              const SizedBox(width: 20.0),
+                              Expanded(
+                                child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    Image.asset(
-                                      item["image"]!,
-                                      height: 120,
-                                      width: 120,
-                                      fit: BoxFit.cover,
-                                    ),
-                                    const SizedBox(width: 20.0),
-                                    Expanded(
-                                      child: Column(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.start,
-                                        children: [
-                                          Text(item["name"]!,
-                                              style: AppWidget
-                                                  .semiBoldTextFeildStyle(),
-                                              overflow: TextOverflow.ellipsis),
-                                          const SizedBox(height: 5.0),
-                                          Text(item["description"]!,
-                                              style: AppWidget
-                                                  .LightTextFeildStyle()),
-                                          const SizedBox(height: 5.0),
-                                          Text(item["price"]!,
-                                              style: AppWidget
-                                                  .semiBoldTextFeildStyle()),
-                                        ],
-                                      ),
-                                    ),
+                                    Text(item["name"]!,
+                                        style:
+                                            AppWidget.semiBoldTextFeildStyle(),
+                                        overflow: TextOverflow.ellipsis),
+                                    const SizedBox(height: 5.0),
+                                    Text(item["description"]!,
+                                        style: AppWidget.LightTextFeildStyle()),
+                                    const SizedBox(height: 5.0),
+                                    Text(item["price"]!,
+                                        style:
+                                            AppWidget.semiBoldTextFeildStyle()),
                                   ],
                                 ),
                               ),
-                            ),
+                            ],
                           ),
-                        );
-                      }).toList(),
-                    )
-                  : const Center(
-                      child: Text(
-                        "No items found",
-                        style: TextStyle(fontSize: 18.0),
+                        ),
                       ),
                     ),
+                  )),
             ],
           ),
         ),

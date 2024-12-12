@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:collegeproject/widget/widget_support.dart';
+import 'package:flutter_paypal_checkout/flutter_paypal_checkout.dart';
 
 class Order extends StatefulWidget {
   const Order({super.key});
@@ -139,15 +140,81 @@ class _OrderPageState extends State<Order> {
   }
 
   void _handleCheckout() {
-    setState(() {
-      totalPrice = 0;
-      dummyCart.clear();
-    });
+    if (totalPrice == 0) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Your cart is empty!")),
+      );
+      return;
+    }
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text("Checkout successful!")),
-    );
+    // Navigate to the PayPal Checkout Page
+    Navigator.of(context).push(MaterialPageRoute(
+      builder: (BuildContext context) => PaypalCheckout(
+        sandboxMode: true,
+        clientId:
+            "ARtTBjurMSX6gL0Hir_lEUTudAZ-bq1zPCeMPQQhvmdQVLQqPhNRsmdz6ckzGD8Xx0ZkG7UDdbpYGRhn",
+        secretKey:
+            "EBpFs1fuki9cSgqjvYgy1cxuH3NznSrQxBSy0pJPsCWb4sbL1bU8myhir3KcXpyouH5xigqxoTfNqPLf",
+        returnURL: "https://xyz123.ngrok.io/success",
+        cancelURL: "https://xyz123.ngrok.io/cancel",
+        transactions: [
+          {
+            "amount": {
+              "total": totalPrice.toString(),
+              "currency": "USD",
+              "details": {
+                "subtotal": totalPrice.toString(),
+                "shipping": '0',
+                "shipping_discount": 0,
+              }
+            },
+            "description": "Food Cart Payment",
+            "item_list": {
+              "items": dummyCart.map((item) {
+                return {
+                  "name": item["Name"],
+                  "quantity": item["Quantity"],
+                  "price": item["Price"].toString(),
+                  "currency": "USD",
+                };
+              }).toList(),
+            }
+          }
+        ],
+        note: "Thank you for your purchase!",
+        onSuccess: (Map params) async {
+          print("onSuccess: $params");
+
+          setState(() {
+            totalPrice = 0;
+            dummyCart.clear();
+          });
+
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text("Checkout successful!")),
+          );
+        },
+        onError: (error) {
+          print("onError: $error");
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text("Checkout failed!")),
+          );
+          Navigator.pop(context);
+        },
+        onCancel: () {
+          print('Cancelled');
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text("Checkout cancelled!")),
+          );
+        },
+      ),
+    ));
   }
+
+  //   ScaffoldMessenger.of(context).showSnackBar(
+  //     const SnackBar(content: Text("Checkout successful!")),
+  //   );
+  // }
 
   @override
   Widget build(BuildContext context) {

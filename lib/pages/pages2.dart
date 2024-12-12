@@ -1,3 +1,5 @@
+import 'package:collegeproject/pages/page1.dart';
+import 'package:collegeproject/pages/pages3.dart';
 import 'package:flutter/material.dart';
 import 'package:collegeproject/pages/details.dart';
 import 'package:collegeproject/widget/widget_support.dart';
@@ -13,53 +15,58 @@ class _Pages2State extends State<Pages2> {
   final TextEditingController _searchController = TextEditingController();
   final List<Map<String, String>> _items = [
     {
-      "name": "Fruit Salad",
-      "description": "Refreshing and Juicy",
-      "price": "\$20",
-      "image": "images/burger.png"
+      "name": "Aloo Bhaji",
+      "description": "Mildly spiced potato curry, a perfect comfort food.",
+      "price": "₹60",
+      "image": "images/aalo_bhaji.jpg"
     },
     {
-      "name": "Greek Salad",
-      "description": "Tangy and Crunchy",
-      "price": "\$25",
-      "image": "images/salad4.png"
+      "name": "Kanda Poha",
+      "description":
+          "Light and flavorful flattened rice with onions, peanuts, and lemon.",
+      "price": "₹50",
+      "image": "images/kanda_poha.jpg"
     },
     {
-      "name": "Avocado Salad",
-      "description": "Healthy and Delicious",
-      "price": "\$30",
-      "image": "images/salad4.png"
+      "name": "Misal Pav",
+      "description": "Spicy sprouted lentil curry served with fresh pav bread.",
+      "price": "₹70",
+      "image": "images/misal_pav.jpg"
     },
     {
-      "name": "Caesar Salad",
-      "description": "Classic and Creamy",
-      "price": "\$22",
-      "image": "images/salad4.png"
+      "name": "Dhokla",
+      "description":
+          "Soft, spongy gram flour cakes topped with mustard seeds and green chilies.",
+      "price": "₹40",
+      "image": "images/dhokla.jpg"
     },
     {
-      "name": "Fruit Salad",
-      "description": "Refreshing and Juicy",
-      "price": "\$20",
-      "image": "images/burger.png"
+      "name": "Masala Khichdi",
+      "description":
+          "Wholesome rice and lentil mixture seasoned with Indian spices.",
+      "price": "₹60",
+      "image": "images/masala_khichdi.jpg"
     },
     {
-      "name": "Greek Salad",
-      "description": "Tangy and Crunchy",
-      "price": "\$25",
-      "image": "images/salad4.png"
+      "name": "Batata Vada",
+      "description": "Crispy deep-fried potato fritters served with chutney.",
+      "price": "₹50",
+      "image": "images/batata_vada.jpg"
     },
     {
-      "name": "Avocado Salad",
-      "description": "Healthy and Delicious",
-      "price": "\$30",
-      "image": "images/salad4.png"
+      "name": "Lemon Rice",
+      "description":
+          "Tangy rice infused with lemon juice and tempered with mustard seeds.",
+      "price": "₹55",
+      "image": "images/lemon_rice.jpg"
     },
     {
-      "name": "Caesar Salad",
-      "description": "Classic and Creamy",
-      "price": "\$22",
-      "image": "images/salad4.png"
-    },
+      "name": "Gulab Jamun",
+      "description":
+          "Soft, syrup-soaked sweet dumplings for a perfect end to the meal.",
+      "price": "₹40",
+      "image": "images/gulab_jamun.jpg"
+    }
   ];
 
   List<Map<String, String>> _filteredItems = [];
@@ -87,9 +94,25 @@ class _Pages2State extends State<Pages2> {
   }
 
   void _onMenuOptionSelected(String value) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text("$value selected")),
-    );
+    if (value == "GIT") {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => const Pages1(), // Navigate to Pages1
+        ),
+      );
+    } else if (value == "Shabari") {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => const Pages3(), // Navigate to Pages3
+        ),
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("$value selected")),
+      );
+    }
     // Add logic for specific option selection here if needed.
   }
 
@@ -186,7 +209,12 @@ class _Pages2State extends State<Pages2> {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (context) => const Details(item: {},),
+                          builder: (context) => Details(
+                            name: item["name"]!,
+                            description: item["description"]!,
+                            price: item["price"]!,
+                            imagePath: item["image"]!,
+                          ),
                         ),
                       );
                     },

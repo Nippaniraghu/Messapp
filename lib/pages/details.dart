@@ -2,7 +2,16 @@ import 'package:flutter/material.dart';
 import 'package:collegeproject/widget/widget_support.dart';
 
 class Details extends StatefulWidget {
-  const Details({super.key, required Map<String, String> item});
+  final String name;
+  final String description;
+  final String price;
+  final String imagePath;
+  const Details(
+      {super.key,
+      required this.name,
+      required this.description,
+      required this.price,
+      required this.imagePath});
 
   @override
   State<Details> createState() => _DetailsState();
@@ -10,15 +19,17 @@ class Details extends StatefulWidget {
 
 class _DetailsState extends State<Details> {
   int a = 1;
-  double basePrice = 28.0; // Base price of a single item
+  //double basePrice = 28.0; // Base price of a single item
 
   @override
   Widget build(BuildContext context) {
+    double basePrice =
+        double.parse(widget.price.replaceAll(RegExp(r'[^\d.]'), ''));
     double totalPrice = basePrice * a; // Calculate total price dynamically
 
     return Scaffold(
       body: Container(
-        margin: EdgeInsets.only(top: 50.0, left: 20.0, right: 20.0),
+        margin: const EdgeInsets.only(top: 50.0, left: 20.0, right: 20.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -26,17 +37,20 @@ class _DetailsState extends State<Details> {
                 onTap: () {
                   Navigator.pop(context);
                 },
-                child: Icon(
+                child: const Icon(
                   Icons.arrow_back_ios_new_outlined,
                   color: Colors.black,
                 )),
-            Image.asset(
-              "images/salad2.png",
-              width: MediaQuery.of(context).size.width,
-              height: MediaQuery.of(context).size.height / 2.5,
-              fit: BoxFit.fill,
+            ClipRRect(
+              borderRadius: BorderRadius.circular(8.0),
+              child: Image.asset(
+                widget.imagePath, // Dynamically set image path
+                width: MediaQuery.of(context).size.width,
+                height: MediaQuery.of(context).size.height / 2.5,
+                fit: BoxFit.fill,
+              ),
             ),
-            SizedBox(
+            const SizedBox(
               height: 15.0,
             ),
             Row(
@@ -45,7 +59,7 @@ class _DetailsState extends State<Details> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      "Mediterranean",
+                      widget.name,
                       style: AppWidget.semiBoldTextFeildStyle(),
                     ),
                     Text(
@@ -54,7 +68,7 @@ class _DetailsState extends State<Details> {
                     ),
                   ],
                 ),
-                Spacer(),
+                const Spacer(),
                 GestureDetector(
                   onTap: () {
                     if (a > 1) {
@@ -66,20 +80,20 @@ class _DetailsState extends State<Details> {
                     decoration: BoxDecoration(
                         color: Colors.black,
                         borderRadius: BorderRadius.circular(8)),
-                    child: Icon(
+                    child: const Icon(
                       Icons.remove,
                       color: Colors.white,
                     ),
                   ),
                 ),
-                SizedBox(
+                const SizedBox(
                   width: 20.0,
                 ),
                 Text(
                   a.toString(),
                   style: AppWidget.semiBoldTextFeildStyle(),
                 ),
-                SizedBox(
+                const SizedBox(
                   width: 20.0,
                 ),
                 GestureDetector(
@@ -91,7 +105,7 @@ class _DetailsState extends State<Details> {
                     decoration: BoxDecoration(
                         color: Colors.black,
                         borderRadius: BorderRadius.circular(8)),
-                    child: Icon(
+                    child: const Icon(
                       Icons.add,
                       color: Colors.white,
                     ),
@@ -99,15 +113,15 @@ class _DetailsState extends State<Details> {
                 )
               ],
             ),
-            SizedBox(
+            const SizedBox(
               height: 20.0,
             ),
             Text(
-              "Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book.",
+              widget.description,
               maxLines: 4,
               style: AppWidget.LightTextFeildStyle(),
             ),
-            SizedBox(
+            const SizedBox(
               height: 30.0,
             ),
             Row(
@@ -116,14 +130,14 @@ class _DetailsState extends State<Details> {
                   "Delivery Time",
                   style: AppWidget.semiBoldTextFeildStyle(),
                 ),
-                SizedBox(
+                const SizedBox(
                   width: 25.0,
                 ),
-                Icon(
+                const Icon(
                   Icons.alarm,
                   color: Colors.black54,
                 ),
-                SizedBox(
+                const SizedBox(
                   width: 5.0,
                 ),
                 Text(
@@ -132,7 +146,7 @@ class _DetailsState extends State<Details> {
                 )
               ],
             ),
-            Spacer(),
+            const Spacer(),
             Padding(
               padding: const EdgeInsets.only(bottom: 40.0),
               child: Row(
@@ -142,45 +156,41 @@ class _DetailsState extends State<Details> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        "Total Price",
+                        "₹${totalPrice.toStringAsFixed(2)}",
                         style: AppWidget.semiBoldTextFeildStyle(),
                       ),
-                      Text(
-                        "\$${totalPrice.toStringAsFixed(2)}", // Display total price
-                        style: AppWidget.HeadlineTextFeildStyle(),
-                      )
                     ],
                   ),
                   Container(
                     width: MediaQuery.of(context).size.width / 2,
-                    padding: EdgeInsets.all(8),
+                    padding: const EdgeInsets.all(8),
                     decoration: BoxDecoration(
                         color: Colors.black,
                         borderRadius: BorderRadius.circular(10)),
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.end,
                       children: [
-                        Text(
+                        const Text(
                           "Add to cart",
                           style: TextStyle(
                               color: Colors.white,
                               fontSize: 16.0,
                               fontFamily: 'Poppins'),
                         ),
-                        SizedBox(
+                        const SizedBox(
                           width: 30.0,
                         ),
                         Container(
-                          padding: EdgeInsets.all(3),
+                          padding: const EdgeInsets.all(3),
                           decoration: BoxDecoration(
                               color: Colors.grey,
                               borderRadius: BorderRadius.circular(8)),
-                          child: Icon(
+                          child: const Icon(
                             Icons.shopping_cart_outlined,
                             color: Colors.white,
                           ),
                         ),
-                        SizedBox(
+                        const SizedBox(
                           width: 10.0,
                         ),
                       ],

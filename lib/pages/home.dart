@@ -5,7 +5,6 @@ import 'package:collegeproject/pages/page1.dart';
 import 'package:collegeproject/pages/pages2.dart';
 import 'package:collegeproject/pages/pages3.dart';
 import 'package:provider/provider.dart';
-import 'package:collegeproject/pages/cart_provider.dart';
 import 'package:collegeproject/widget/widget_support.dart';
 
 class Home extends StatefulWidget {
@@ -196,7 +195,12 @@ class _HomeState extends State<Home> {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (context) => Details(item: item),
+                          builder: (context) => Details(
+                            name: item["name"]!,
+                            description: item["description"]!,
+                            price: item["price"]!,
+                            imagePath: item["image"]!,
+                          ),
                         ),
                       );
                     },

@@ -1,5 +1,4 @@
 import 'package:collegeproject/pages/forgotpassword.dart';
-import 'package:collegeproject/widget/content_model.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:collegeproject/pages/signup.dart';
@@ -16,8 +15,8 @@ class _LogInState extends State<LogIn> {
 
   final _formkey = GlobalKey<FormState>();
 
-  TextEditingController useremailcontroller = new TextEditingController();
-  TextEditingController userpasswordcontroller = new TextEditingController();
+  TextEditingController useremailcontroller = TextEditingController();
+  TextEditingController userpasswordcontroller = TextEditingController();
 
   userLogin() async {
     try {
@@ -25,13 +24,13 @@ class _LogInState extends State<LogIn> {
           .signInWithEmailAndPassword(email: email, password: password);
     } on FirebaseAuthException catch (e) {
       if (e.code == 'user-not-found') {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
             content: Text(
           "No User found for that email",
           style: TextStyle(fontSize: 18.0, color: Colors.black),
         )));
       } else if (e.code == 'wrong-password') {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
             content: Text(
           "Incorrect Password",
           style: TextStyle(fontSize: 18.0, color: Colors.black),
@@ -147,7 +146,7 @@ class _LogInState extends State<LogIn> {
                                     context,
                                     MaterialPageRoute(
                                         builder: (context) =>
-                                            ForgotPassword()));
+                                            const ForgotPassword()));
                               },
                               child: Container(
                                   alignment: Alignment.topRight,

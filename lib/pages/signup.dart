@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:collegeproject/pages/bottomnav.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -21,34 +22,64 @@ class _SignUpState extends State<SignUp> {
 
   final _formkey = GlobalKey<FormState>();
 
-  registration() async {
+  Future<void> registration() async {
     try {
+      // Create the user and send a verification email
       UserCredential userCredential = await FirebaseAuth.instance
           .createUserWithEmailAndPassword(email: email, password: password);
 
-      ScaffoldMessenger.of(context).showSnackBar((SnackBar(
-          backgroundColor: Colors.redAccent,
-          content: Text(
-            "Registered Successfully",
-            style: TextStyle(fontSize: 20.0),
-          ))));
-      Navigator.pushReplacement(
-          context, MaterialPageRoute(builder: (context) => BottomNav()));
-    } on FirebaseException catch (e) {
+      User? tempUser = userCredential.user;
+
+      if (tempUser != null) {
+        // Send verification email
+        await tempUser.sendEmailVerification();
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            backgroundColor: Colors.green,
+            content: Text(
+              "Registration email sent! Please verify your email to complete registration.",
+              style: TextStyle(fontSize: 18.0),
+            ),
+          ),
+        );
+        bool isVerified = false;
+        while (!isVerified) {
+          await Future.delayed(
+              const Duration(seconds: 3)); // Delay for 3 seconds
+          await tempUser?.reload(); // Refresh user data
+          tempUser = FirebaseAuth.instance.currentUser; // Get updated user info
+          isVerified = tempUser?.emailVerified ?? false;
+        }
+
+        // Add verified user to Firestore
+        await FirebaseFirestore.instance.collection('users').doc(email).set({
+          'name': name,
+          'email': email,
+          'created_at': DateTime.now(),
+        });
+
+        // Navigate to the next screen
+        Navigator.pushReplacement(context,
+            MaterialPageRoute(builder: (context) => const BottomNav()));
+      }
+    } on FirebaseAuthException catch (e) {
       if (e.code == 'weak-password') {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-            backgroundColor: Colors.orangeAccent,
-            content: Text(
-              "Password Provided is too Weak",
-              style: TextStyle(fontSize: 18.0),
-            )));
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+          backgroundColor: Colors.orangeAccent,
+          content: Text(
+            "Password Provided is too Weak",
+            style: TextStyle(fontSize: 18.0),
+          ),
+        ));
       } else if (e.code == "email-already-in-use") {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-            backgroundColor: Colors.orangeAccent,
-            content: Text(
-              "Account Already Exists",
-              style: TextStyle(fontSize: 18.0),
-            )));
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+          backgroundColor: Colors.orangeAccent,
+          content: Text(
+            "Account Already Exists",
+            style: TextStyle(fontSize: 18.0),
+          ),
+        ));
       }
     }
   }

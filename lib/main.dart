@@ -1,28 +1,17 @@
-import 'package:collegeproject/admin/add_food.dart';
 import 'package:collegeproject/admin/admin_login.dart';
-import 'package:collegeproject/admin/home_admin.dart';
-import 'package:collegeproject/admin/pending_orders.dart';
-import 'package:collegeproject/pages/bottomnav.dart';
 import 'package:collegeproject/pages/cart_provider.dart';
-import 'package:collegeproject/pages/home.dart';
-import 'package:collegeproject/pages/login.dart';
-import 'package:collegeproject/pages/order.dart';
 import 'package:collegeproject/pages/page1.dart';
-import 'package:collegeproject/pages/pages2.dart';
-import 'package:collegeproject/pages/profile.dart';
-import 'package:collegeproject/pages/signup.dart';
-import 'package:collegeproject/pages/wallet.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/foundation.dart';
 // import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
-import 'package:collegeproject/pages/onboard.dart';
 import 'package:provider/provider.dart';
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
   if (kIsWeb) {
     Firebase.initializeApp(
-        options: FirebaseOptions(
+        options: const FirebaseOptions(
             apiKey: "AIzaSyChKTXOoALn-Wgo6FhK896lHjrp0advtDE",
             authDomain: "mess-app-ec79e.firebaseapp.com",
             projectId: "mess-app-ec79e",
@@ -30,7 +19,7 @@ void main() {
             messagingSenderId: "433969056606",
             appId: "1:433969056606:web:521a8e9010ee6232839dcf"));
   } else {
-    Firebase.initializeApp();
+    await Firebase.initializeApp();
   }
 // async {
 //   WidgetsFlutterBinding.ensureInitialized();
@@ -72,7 +61,7 @@ class MyApp extends StatelessWidget {
           colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
           useMaterial3: true,
         ),
-        home: const AddFood());
+        home: const Pages1());
   }
 }
 

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'add_food.dart'; // Ensure this import points to the AddFood file location.
+// Ensure this import points to the AddFood file location.
 
 class PendingOrders extends StatefulWidget {
   const PendingOrders({super.key});

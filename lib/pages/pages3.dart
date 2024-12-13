@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:collegeproject/pages/page1.dart';
 import 'package:collegeproject/pages/pages2.dart';
 import 'package:flutter/material.dart';
@@ -13,68 +14,43 @@ class Pages3 extends StatefulWidget {
 
 class _Pages3State extends State<Pages3> {
   final TextEditingController _searchController = TextEditingController();
-  final List<Map<String, String>> _items = [
-    {
-      "name": "Sheera (Kesari Bath)",
-      "description":
-          "Sweet semolina pudding flavored with saffron and cardamom.",
-      "price": "₹50",
-      "image": "images/sheera.jpg"
-    },
-    {
-      "name": "Vegetable Upma",
-      "description":
-          "Semolina cooked with mixed vegetables and tempered with curry leaves.",
-      "price": "₹60",
-      "image": "images/vegetable_upma.jpg"
-    },
-    {
-      "name": "Sabudana Khichdi",
-      "description":
-          "Tapioca pearls cooked with peanuts, potatoes, and a hint of lime.",
-      "price": "₹65",
-      "image": "images/sabudana_khicdi.jpg"
-    },
-    {
-      "name": "Palak Poori with Aloo",
-      "description": "Deep-fried spinach bread served with spicy potato curry.",
-      "price": "₹70",
-      "image": "images/palak_puri_aalo.jpg"
-    },
-    {
-      "name": "Pesarattu",
-      "description":
-          "Protein-rich green gram dosa paired with tangy ginger chutney.",
-      "price": "₹60",
-      "image": "images/pesarattu.jpg"
-    },
-    {
-      "name": "Tomato Bath",
-      "description": "Flavorful rice cooked with tomatoes and aromatic spices.",
-      "price": "₹50",
-      "image": "images/tomato_bath.jpg"
-    },
-    {
-      "name": "Medu Vada",
-      "description":
-          "Crispy lentil donuts served with coconut chutney and sambar.",
-      "price": "₹40",
-      "image": "images/medu_vada.jpeg"
-    },
-    {
-      "name": "Shrikhand",
-      "description": "Sweet and creamy yogurt dessert infused with cardamom.",
-      "price": "₹45",
-      "image": "images/shrikhand.jpg"
-    }
-  ];
-
   List<Map<String, String>> _filteredItems = [];
+  List<Map<String, String>> _items = [];
 
   @override
   void initState() {
     super.initState();
-    _filteredItems = _items; // Initialize with all items.
+    _fetchMenuItems(); // Fetch the menu items when the page loads
+  }
+
+  void _fetchMenuItems() async {
+    try {
+      // Fetch the documents from the Firestore collection
+      QuerySnapshot snapshot = await FirebaseFirestore.instance
+          .collection('Admin')
+          .doc('shabari')
+          .collection('menu') // Your Firestore collection name
+          .get();
+
+      List<Map<String, String>> items = [];
+      for (var doc in snapshot.docs) {
+        // Assuming the document has fields 'name', 'description', 'price', and 'image'
+        Map<String, String> item = {
+          'name': doc['Name'],
+          'description': doc['Detail'],
+          'price': doc['Price'],
+          'image': doc['Image'], // You may need to store the image URL here
+        };
+        items.add(item);
+      }
+
+      setState(() {
+        _items = items;
+        _filteredItems = items; // Initialize filteredItems with all items
+      });
+    } catch (e) {
+      print("Error fetching menu items: $e");
+    }
   }
 
   void _searchItems(String query) {
@@ -228,7 +204,7 @@ class _Pages3State extends State<Pages3> {
                           child: Row(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Image.asset(
+                              Image.network(
                                 item["image"]!,
                                 height: 120,
                                 width: 120,

@@ -1,6 +1,7 @@
-import 'package:collegeproject/admin/admin_login.dart';
 import 'package:collegeproject/pages/cart_provider.dart';
+import 'package:collegeproject/pages/login.dart';
 import 'package:collegeproject/pages/page1.dart';
+import 'package:collegeproject/pages/signup.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/foundation.dart';
 // import 'package:firebase_core/firebase_core.dart';
@@ -14,10 +15,12 @@ void main() async {
         options: const FirebaseOptions(
             apiKey: "AIzaSyChKTXOoALn-Wgo6FhK896lHjrp0advtDE",
             authDomain: "mess-app-ec79e.firebaseapp.com",
+            databaseURL: "https://mess-app-ec79e-default-rtdb.firebaseio.com",
             projectId: "mess-app-ec79e",
             storageBucket: "mess-app-ec79e.appspot.com",
             messagingSenderId: "433969056606",
-            appId: "1:433969056606:web:521a8e9010ee6232839dcf"));
+            appId: "1:433969056606:web:521a8e9010ee6232839dcf",
+            measurementId: "G-BRY36Y68PB"));
   } else {
     await Firebase.initializeApp();
   }
@@ -61,7 +64,7 @@ class MyApp extends StatelessWidget {
           colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
           useMaterial3: true,
         ),
-        home: const Pages1());
+        home: const LogIn());
   }
 }
 

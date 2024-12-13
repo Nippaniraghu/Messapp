@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:collegeproject/pages/page1.dart';
 import 'package:collegeproject/pages/pages3.dart';
 import 'package:flutter/material.dart';
@@ -13,68 +14,43 @@ class Pages2 extends StatefulWidget {
 
 class _Pages2State extends State<Pages2> {
   final TextEditingController _searchController = TextEditingController();
-  final List<Map<String, String>> _items = [
-    {
-      "name": "Aloo Bhaji",
-      "description": "Mildly spiced potato curry, a perfect comfort food.",
-      "price": "₹60",
-      "image": "images/aalo_bhaji.jpg"
-    },
-    {
-      "name": "Kanda Poha",
-      "description":
-          "Light and flavorful flattened rice with onions, peanuts, and lemon.",
-      "price": "₹50",
-      "image": "images/kanda_poha.jpg"
-    },
-    {
-      "name": "Misal Pav",
-      "description": "Spicy sprouted lentil curry served with fresh pav bread.",
-      "price": "₹70",
-      "image": "images/misal_pav.jpg"
-    },
-    {
-      "name": "Dhokla",
-      "description":
-          "Soft, spongy gram flour cakes topped with mustard seeds and green chilies.",
-      "price": "₹40",
-      "image": "images/dhokla.jpg"
-    },
-    {
-      "name": "Masala Khichdi",
-      "description":
-          "Wholesome rice and lentil mixture seasoned with Indian spices.",
-      "price": "₹60",
-      "image": "images/masala_khichdi.jpg"
-    },
-    {
-      "name": "Batata Vada",
-      "description": "Crispy deep-fried potato fritters served with chutney.",
-      "price": "₹50",
-      "image": "images/batata_vada.jpg"
-    },
-    {
-      "name": "Lemon Rice",
-      "description":
-          "Tangy rice infused with lemon juice and tempered with mustard seeds.",
-      "price": "₹55",
-      "image": "images/lemon_rice.jpg"
-    },
-    {
-      "name": "Gulab Jamun",
-      "description":
-          "Soft, syrup-soaked sweet dumplings for a perfect end to the meal.",
-      "price": "₹40",
-      "image": "images/gulab_jamun.jpg"
-    }
-  ];
-
   List<Map<String, String>> _filteredItems = [];
+  List<Map<String, String>> _items = [];
 
   @override
   void initState() {
     super.initState();
-    _filteredItems = _items; // Initialize with all items.
+    _fetchMenuItems(); // Fetch the menu items when the page loads
+  }
+
+  void _fetchMenuItems() async {
+    try {
+      // Fetch the documents from the Firestore collection
+      QuerySnapshot snapshot = await FirebaseFirestore.instance
+          .collection('Admin')
+          .doc('durga')
+          .collection('menu') // Your Firestore collection name
+          .get();
+
+      List<Map<String, String>> items = [];
+      for (var doc in snapshot.docs) {
+        // Assuming the document has fields 'name', 'description', 'price', and 'image'
+        Map<String, String> item = {
+          'name': doc['Name'],
+          'description': doc['Detail'],
+          'price': doc['Price'],
+          'image': doc['Image'], // You may need to store the image URL here
+        };
+        items.add(item);
+      }
+
+      setState(() {
+        _items = items;
+        _filteredItems = items; // Initialize filteredItems with all items
+      });
+    } catch (e) {
+      print("Error fetching menu items: $e");
+    }
   }
 
   void _searchItems(String query) {
@@ -228,7 +204,7 @@ class _Pages2State extends State<Pages2> {
                           child: Row(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Image.asset(
+                              Image.network(
                                 item["image"]!,
                                 height: 120,
                                 width: 120,

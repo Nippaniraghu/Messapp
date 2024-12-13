@@ -1,3 +1,5 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:collegeproject/pages/bottomnav.dart';
 import 'package:collegeproject/pages/forgotpassword.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -20,8 +22,38 @@ class _LogInState extends State<LogIn> {
 
   userLogin() async {
     try {
-      await FirebaseAuth.instance
+      UserCredential userCredential = await FirebaseAuth.instance
           .signInWithEmailAndPassword(email: email, password: password);
+
+      User? user = userCredential.user;
+
+      // Check if email is verified
+      if (user != null && !user.emailVerified) {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+            content: Text(
+          "Email is not verified. Please verify your email to login.",
+          style: TextStyle(fontSize: 18.0, color: Colors.black),
+        )));
+        await FirebaseAuth.instance.signOut(); // Sign out the user
+        return;
+      }
+
+      // If email is verified, proceed to the home screen or other functionality
+      Navigator.pushReplacement(
+          context, MaterialPageRoute(builder: (context) => const BottomNav()));
+      void _updateEmailVerificationStatus() async {
+        User? user = FirebaseAuth.instance.currentUser;
+
+        if (user != null) {
+          await user.reload(); // Refresh user data
+          if (user.emailVerified) {
+            await FirebaseFirestore.instance
+                .collection('users')
+                .doc(user.uid)
+                .update({'isEmailVerified': true});
+          }
+        }
+      }
     } on FirebaseAuthException catch (e) {
       if (e.code == 'user-not-found') {
         ScaffoldMessenger.of(context).showSnackBar(const SnackBar(

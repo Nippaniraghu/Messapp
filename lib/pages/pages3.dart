@@ -14,8 +14,8 @@ class Pages3 extends StatefulWidget {
 
 class _Pages3State extends State<Pages3> {
   final TextEditingController _searchController = TextEditingController();
-  List<Map<String, String>> _filteredItems = [];
-  List<Map<String, String>> _items = [];
+  List<Map<String, dynamic>> _filteredItems = [];
+  List<Map<String, dynamic>> _items = [];
 
   @override
   void initState() {
@@ -32,13 +32,14 @@ class _Pages3State extends State<Pages3> {
           .collection('menu') // Your Firestore collection name
           .get();
 
-      List<Map<String, String>> items = [];
+      List<Map<String, dynamic>> items = [];
       for (var doc in snapshot.docs) {
+        double price = double.tryParse(doc['Price'].toString()) ?? 0.0;
         // Assuming the document has fields 'name', 'description', 'price', and 'image'
-        Map<String, String> item = {
+        Map<String, dynamic> item = {
           'name': doc['Name'],
           'description': doc['Detail'],
-          'price': doc['Price'],
+          'price': price,
           'image': doc['Image'], // You may need to store the image URL here
         };
         items.add(item);
@@ -188,7 +189,7 @@ class _Pages3State extends State<Pages3> {
                           builder: (context) => Details(
                             name: item["name"]!,
                             description: item["description"]!,
-                            price: item["price"]!,
+                            price: item["price"].toString(),
                             imagePath: item["image"]!,
                           ),
                         ),
@@ -223,7 +224,7 @@ class _Pages3State extends State<Pages3> {
                                     Text(item["description"]!,
                                         style: AppWidget.LightTextFeildStyle()),
                                     const SizedBox(height: 5.0),
-                                    Text(item["price"]!,
+                                    Text("₹ ${item["price"]}",
                                         style:
                                             AppWidget.semiBoldTextFeildStyle()),
                                   ],

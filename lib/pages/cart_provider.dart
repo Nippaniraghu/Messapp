@@ -2,16 +2,16 @@
 import 'package:flutter/material.dart';
 
 class CartModel extends ChangeNotifier {
-  final List<Map<String, String>> _items = [];
+  final List<Map<String, dynamic>> _items = [];
 
-  List<Map<String, String>> get items => _items;
+  List<Map<String, dynamic>> get items => _items;
 
-  void addItem(Map<String, String> item) {
+  void addItem(Map<String, dynamic> item) {
     _items.add(item);
     notifyListeners(); // Notify listeners that the state has changed.
   }
 
-  void removeItem(Map<String, String> item) {
+  void removeItem(Map<String, dynamic> item) {
     _items.remove(item);
     notifyListeners();
   }

@@ -1,7 +1,5 @@
 import 'package:collegeproject/pages/cart_provider.dart';
 import 'package:collegeproject/pages/login.dart';
-import 'package:collegeproject/pages/page1.dart';
-import 'package:collegeproject/pages/signup.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/foundation.dart';
 // import 'package:firebase_core/firebase_core.dart';

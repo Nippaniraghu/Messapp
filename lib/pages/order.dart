@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:collegeproject/widget/widget_support.dart';
 import 'package:flutter_paypal_checkout/flutter_paypal_checkout.dart';
-//import 'package:flutter_paypal/flutter_paypal.dart';
+import 'package:collegeproject/pages/cart_provider.dart'; // Import your CartModel
 
 class Order extends StatefulWidget {
   const Order({super.key});
@@ -13,58 +14,53 @@ class Order extends StatefulWidget {
 class _OrderPageState extends State<Order> {
   int totalPrice = 0;
 
-  // Dummy cart data
-  final List<Map<String, dynamic>> dummyCart = [
-    {
-      "Name": "Veg Thali",
-      "Quantity": 1,
-      "Image": "images/salad2.png", // Updated image reference
-      "Price": 10
-    },
-    {
-      "Name": "Curd Rice",
-      "Quantity": 1,
-      "Image": "images/salad4.png", // Updated image reference
-      "Price": 10
-    },
-    {
-      "Name": "Pasta",
-      "Quantity": 1,
-      "Image": "images/burger.png", // Updated image reference
-      "Price": 15
-    },
-  ];
-
   @override
   void initState() {
     super.initState();
-    _calculateTotal();
+    // No need to calculate total here, as we will use the CartModel to calculate it dynamically.
   }
 
-  void _calculateTotal() {
-    totalPrice = dummyCart.fold(
+  void _calculateTotal(List<Map<String, dynamic>> cartItems) {
+    totalPrice = cartItems.fold(
       0,
-      (sum, item) => sum + (item["Quantity"] as int) * (item["Price"] as int),
+      (sum, item) {
+        int price = item["Price"] is int
+            ? item["Price"]
+            : int.tryParse(item["Price"].toString()) ?? 0;
+        int quantity = item["Quantity"] is int
+            ? item["Quantity"]
+            : int.tryParse(item["Quantity"].toString()) ?? 0;
+        return sum + (price * quantity);
+      },
     );
   }
 
-  void _increaseQuantity(int index) {
+  void _increaseQuantity(int index, List<Map<String, dynamic>> cartItems) {
     setState(() {
-      dummyCart[index]["Quantity"] += 1;
-      _calculateTotal();
+      cartItems[index]["Quantity"] = (cartItems[index]["Quantity"] as int) + 1;
+      _calculateTotal(cartItems);
     });
   }
 
-  void _decreaseQuantity(int index) {
+  void _decreaseQuantity(int index, List<Map<String, dynamic>> cartItems) {
     setState(() {
-      if (dummyCart[index]["Quantity"] > 1) {
-        dummyCart[index]["Quantity"] -= 1;
-        _calculateTotal();
+      int currentQuantity = cartItems[index]["Quantity"] as int;
+      if (currentQuantity > 1) {
+        cartItems[index]["Quantity"] =
+            currentQuantity - 1; // Decrement quantity
+        _calculateTotal(cartItems);
       }
     });
   }
 
-  Widget _buildCartItem(Map<String, dynamic> item, int index) {
+  Widget _buildCartItem(Map<String, dynamic> item, int index,
+      List<Map<String, dynamic>> cartItems) {
+    int price = item["Price"] is int
+        ? item["Price"]
+        : int.tryParse(item["Price"].toString()) ?? 0;
+    int quantity = item["Quantity"] is int
+        ? item["Quantity"]
+        : int.tryParse(item["Quantity"].toString()) ?? 0;
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 10.0),
       child: Material(
@@ -77,7 +73,7 @@ class _OrderPageState extends State<Order> {
             children: [
               ClipRRect(
                 borderRadius: BorderRadius.circular(10),
-                child: Image.asset(
+                child: Image.network(
                   item["Image"],
                   height: 90,
                   width: 90,
@@ -95,12 +91,12 @@ class _OrderPageState extends State<Order> {
                     ),
                     const SizedBox(height: 5.0),
                     Text(
-                      "Price: \$${item["Price"]}",
+                      "Price: \$${price.toString()}",
                       style: AppWidget.LightTextFeildStyle(),
                     ),
                     const SizedBox(height: 5.0),
                     Text(
-                      "Subtotal: \$${item["Price"] * item["Quantity"]}",
+                      "Subtotal: \$${(price * quantity).toString()}",
                       style: AppWidget.semiBoldTextFeildStyle(),
                     ),
                   ],
@@ -109,7 +105,7 @@ class _OrderPageState extends State<Order> {
               Row(
                 children: [
                   IconButton(
-                    onPressed: () => _decreaseQuantity(index),
+                    onPressed: () => _decreaseQuantity(index, cartItems),
                     icon: const Icon(Icons.remove_circle_outline),
                   ),
                   Text(
@@ -117,7 +113,7 @@ class _OrderPageState extends State<Order> {
                     style: AppWidget.boldTextFeildStyle(),
                   ),
                   IconButton(
-                    onPressed: () => _increaseQuantity(index),
+                    onPressed: () => _increaseQuantity(index, cartItems),
                     icon: const Icon(Icons.add_circle_outline),
                   ),
                 ],
@@ -129,18 +125,18 @@ class _OrderPageState extends State<Order> {
     );
   }
 
-  Widget _buildFoodCart() {
+  Widget _buildFoodCart(List<Map<String, dynamic>> cartItems) {
     return ListView.builder(
       padding: EdgeInsets.zero,
-      itemCount: dummyCart.length,
+      itemCount: cartItems.length,
       shrinkWrap: true,
       itemBuilder: (context, index) {
-        return _buildCartItem(dummyCart[index], index);
+        return _buildCartItem(cartItems[index], index, cartItems);
       },
     );
   }
 
-  void _handleCheckout() {
+  void _handleCheckout(List<Map<String, dynamic>> cartItems) {
     if (totalPrice == 0) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text("Your cart is empty!")),
@@ -152,10 +148,8 @@ class _OrderPageState extends State<Order> {
     Navigator.of(context).push(MaterialPageRoute(
       builder: (BuildContext context) => PaypalCheckout(
         sandboxMode: true,
-        clientId:
-            "ARtTBjurMSX6gL0Hir_lEUTudAZ-bq1zPCeMPQQhvmdQVLQqPhNRsmdz6ckzGD8Xx0ZkG7UDdbpYGRhn",
-        secretKey:
-            "EBpFs1fuki9cSgqjvYgy1cxuH3NznSrQxBSy0pJPsCWb4sbL1bU8myhir3KcXpyouH5xigqxoTfNqPLf",
+        clientId: "YOUR_PAYPAL_CLIENT_ID",
+        secretKey: "YOUR_PAYPAL_SECRET_KEY",
         returnURL: "https://xyz123.ngrok.io/success",
         cancelURL: "https://xyz123.ngrok.io/cancel",
         transactions: [
@@ -171,7 +165,7 @@ class _OrderPageState extends State<Order> {
             },
             "description": "Food Cart Payment",
             "item_list": {
-              "items": dummyCart.map((item) {
+              "items": cartItems.map((item) {
                 return {
                   "name": item["Name"],
                   "quantity": item["Quantity"],
@@ -188,7 +182,7 @@ class _OrderPageState extends State<Order> {
 
           setState(() {
             totalPrice = 0;
-            dummyCart.clear();
+            cartItems.clear();
           });
 
           ScaffoldMessenger.of(context).showSnackBar(
@@ -212,77 +206,77 @@ class _OrderPageState extends State<Order> {
     ));
   }
 
-  //   ScaffoldMessenger.of(context).showSnackBar(
-  //     const SnackBar(content: Text("Checkout successful!")),
-  //   );
-  // }
-
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text("Food Cart"),
-        centerTitle: true,
-        elevation: 2.0,
-      ),
-      body: Padding(
-        padding: const EdgeInsets.only(top: 20.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Expanded(
-              child: dummyCart.isNotEmpty
-                  ? _buildFoodCart()
-                  : const Center(
+    return Consumer<CartModel>(
+      builder: (context, cart, child) {
+        _calculateTotal(cart.items); // Recalculate total dynamically
+        return Scaffold(
+          appBar: AppBar(
+            title: const Text("Food Cart"),
+            centerTitle: true,
+            elevation: 2.0,
+          ),
+          body: Padding(
+            padding: const EdgeInsets.only(top: 20.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Expanded(
+                  child: cart.items.isNotEmpty
+                      ? _buildFoodCart(cart.items)
+                      : const Center(
+                          child: Text(
+                            "Your cart is empty!",
+                            style: TextStyle(fontSize: 18.0),
+                          ),
+                        ),
+                ),
+                const Divider(),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 20.0),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        "Total Price",
+                        style: AppWidget.boldTextFeildStyle(),
+                      ),
+                      Text(
+                        "\$$totalPrice",
+                        style: AppWidget.semiBoldTextFeildStyle(),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 20.0),
+                GestureDetector(
+                  onTap: () => _handleCheckout(cart.items),
+                  child: Container(
+                    margin: const EdgeInsets.all(20.0),
+                    padding: const EdgeInsets.symmetric(vertical: 15.0),
+                    width: double.infinity,
+                    decoration: BoxDecoration(
+                      color: Colors.black,
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: const Center(
                       child: Text(
-                        "Your cart is empty!",
-                        style: TextStyle(fontSize: 18.0),
+                        "CheckOut",
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 18.0,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                     ),
-            ),
-            const Divider(),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20.0),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    "Total Price",
-                    style: AppWidget.boldTextFeildStyle(),
-                  ),
-                  Text(
-                    "\$$totalPrice",
-                    style: AppWidget.semiBoldTextFeildStyle(),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 20.0),
-            GestureDetector(
-              onTap: _handleCheckout,
-              child: Container(
-                margin: const EdgeInsets.all(20.0),
-                padding: const EdgeInsets.symmetric(vertical: 15.0),
-                width: double.infinity,
-                decoration: BoxDecoration(
-                  color: Colors.black,
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: const Center(
-                  child: Text(
-                    "CheckOut",
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 18.0,
-                      fontWeight: FontWeight.bold,
-                    ),
                   ),
                 ),
-              ),
+              ],
             ),
-          ],
-        ),
-      ),
+          ),
+        );
+      },
     );
   }
 }

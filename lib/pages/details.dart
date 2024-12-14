@@ -1,5 +1,7 @@
+import 'package:collegeproject/pages/cart_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:collegeproject/widget/widget_support.dart';
+import 'package:provider/provider.dart';
 
 class Details extends StatefulWidget {
   final String name;
@@ -43,7 +45,7 @@ class _DetailsState extends State<Details> {
                 )),
             ClipRRect(
               borderRadius: BorderRadius.circular(8.0),
-              child: Image.asset(
+              child: Image.network(
                 widget.imagePath, // Dynamically set image path
                 width: MediaQuery.of(context).size.width,
                 height: MediaQuery.of(context).size.height / 2.5,
@@ -61,10 +63,6 @@ class _DetailsState extends State<Details> {
                     Text(
                       widget.name,
                       style: AppWidget.semiBoldTextFeildStyle(),
-                    ),
-                    Text(
-                      "Chickpea Salad",
-                      style: AppWidget.boldTextFeildStyle(),
                     ),
                   ],
                 ),
@@ -161,44 +159,63 @@ class _DetailsState extends State<Details> {
                       ),
                     ],
                   ),
-                  Container(
-                    width: MediaQuery.of(context).size.width / 2,
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
+                  GestureDetector(
+                    onTap: () {
+                      final cart =
+                          Provider.of<CartModel>(context, listen: false);
+
+                      cart.addItem({
+                        "Name": widget.name,
+                        "Quantity": a.toString(),
+                        "Image": widget.imagePath,
+                        "Price": widget.price,
+                      });
+
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text("Item added to cart!"),
+                          duration: Duration(seconds: 2),
+                        ),
+                      );
+                    },
+                    child: Container(
+                      width: MediaQuery.of(context).size.width / 2,
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
                         color: Colors.black,
-                        borderRadius: BorderRadius.circular(10)),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.end,
-                      children: [
-                        const Text(
-                          "Add to cart",
-                          style: TextStyle(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.end,
+                        children: [
+                          const Text(
+                            "Add to cart",
+                            style: TextStyle(
                               color: Colors.white,
                               fontSize: 16.0,
-                              fontFamily: 'Poppins'),
-                        ),
-                        const SizedBox(
-                          width: 30.0,
-                        ),
-                        Container(
-                          padding: const EdgeInsets.all(3),
-                          decoration: BoxDecoration(
-                              color: Colors.grey,
-                              borderRadius: BorderRadius.circular(8)),
-                          child: const Icon(
-                            Icons.shopping_cart_outlined,
-                            color: Colors.white,
+                              fontFamily: 'Poppins',
+                            ),
                           ),
-                        ),
-                        const SizedBox(
-                          width: 10.0,
-                        ),
-                      ],
+                          const SizedBox(width: 30.0),
+                          Container(
+                            padding: const EdgeInsets.all(3),
+                            decoration: BoxDecoration(
+                              color: Colors.grey,
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: const Icon(
+                              Icons.shopping_cart_outlined,
+                              color: Colors.white,
+                            ),
+                          ),
+                          const SizedBox(width: 10.0),
+                        ],
+                      ),
                     ),
-                  )
+                  ),
                 ],
               ),
-            )
+            ),
           ],
         ),
       ),

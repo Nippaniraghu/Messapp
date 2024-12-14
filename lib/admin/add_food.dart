@@ -47,6 +47,13 @@ class _AddFoodState extends State<AddFood> {
         namecontroller.text.isNotEmpty &&
         pricecontroller.text.isNotEmpty &&
         detailcontroller.text.isNotEmpty) {
+      // final price = double.tryParse(pricecontroller.text);
+      // if (price == null) {
+      //   ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+      //     content: Text("Please enter a valid numerical value for price."),
+      //   ));
+      //   return;
+      // }
       showDialog(
         context: context,
         barrierDismissible: false,

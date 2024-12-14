@@ -28,6 +28,7 @@ environment:
 # the latest version available on pub.dev. To see which dependencies have newer
 # versions available, run `flutter pub outdated`.
 dependencies:
+
   flutter:
     sdk: flutter
   
@@ -46,6 +47,7 @@ dependencies:
   flutter_paypal_checkout: 1.0.1
   #flutter_paypal: ^0.2.1
   flutter_inappwebview: ">=5.7.2<6.1.5"
+  
 
     # upi_india: ^3.0.1
 
@@ -75,6 +77,7 @@ flutter:
   # included with your application, so that you can use the icons in
   # the material Icons class.
   uses-material-design: true
+  
 
   # To add assets to your application, add an assets section, like this:
   assets:

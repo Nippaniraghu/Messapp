@@ -41,7 +41,7 @@ class _LogInState extends State<LogIn> {
       // If email is verified, proceed to the home screen or other functionality
       Navigator.pushReplacement(
           context, MaterialPageRoute(builder: (context) => const BottomNav()));
-      void _updateEmailVerificationStatus() async {
+      void updateEmailVerificationStatus() async {
         User? user = FirebaseAuth.instance.currentUser;
 
         if (user != null) {

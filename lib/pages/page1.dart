@@ -102,7 +102,7 @@ class _Pages1State extends State<Pages1> {
           items: [
             const PopupMenuItem<String>(
               value: "GIT",
-              child: Text("GIT"),
+              child: Text("College mess"),
             ),
             const PopupMenuItem<String>(
               value: "Durga",
@@ -147,7 +147,7 @@ class _Pages1State extends State<Pages1> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text("KLS GIT"),
+        title: const Text("College mess"),
         actions: [
           Padding(
             padding: const EdgeInsets.only(right: 15.0),

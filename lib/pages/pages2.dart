@@ -103,7 +103,7 @@ class _Pages2State extends State<Pages2> {
           items: [
             const PopupMenuItem<String>(
               value: "GIT",
-              child: Text("GIT"),
+              child: Text("College mess"),
             ),
             const PopupMenuItem<String>(
               value: "Durga",

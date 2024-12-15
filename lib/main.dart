@@ -1,5 +1,5 @@
 import 'package:collegeproject/pages/cart_provider.dart';
-import 'package:collegeproject/pages/login.dart';
+import 'package:collegeproject/pages/onboard.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/foundation.dart';
 // import 'package:firebase_core/firebase_core.dart';
@@ -62,7 +62,7 @@ class MyApp extends StatelessWidget {
           colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
           useMaterial3: true,
         ),
-        home: const LogIn());
+        home: const Onboard());
   }
 }
 

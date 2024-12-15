@@ -5,12 +5,12 @@ import 'package:firebase_auth/firebase_auth.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp(); // Ensure Firebase is initialized
-  runApp(const MaterialApp(home: Wallet())); // No need to pass uid
+  await Firebase.initializeApp();
+  runApp(const MaterialApp(home: Wallet()));
 }
 
 class Wallet extends StatefulWidget {
-  const Wallet({Key? key}) : super(key: key);
+  const Wallet({super.key});
 
   @override
   _WalletState createState() => _WalletState();
@@ -20,57 +20,116 @@ class _WalletState extends State<Wallet> {
   final TextEditingController _transactionIdController =
       TextEditingController();
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
-  String? _uid; // Store the UID here
+  String? _uid;
+  bool _isPaid = false;
+  int _totalAmount = 0;
 
   @override
   void initState() {
     super.initState();
-    _getUserUid(); // Fetch UID when the widget is initialized
+    _getUserUid();
   }
 
-  // Function to get the UID from FirebaseAuth (if the user is logged in)
   Future<void> _getUserUid() async {
     User? user = FirebaseAuth.instance.currentUser;
     if (user != null) {
       setState(() {
-        _uid = user.uid; // Assign UID
+        _uid = user.uid;
       });
+      _calculateTotalAmount(); // Fetch total amount after UID is set
     } else {
-      // If no user is logged in, show a message
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('User not logged in')),
       );
     }
   }
 
-  // Function to handle adding transaction ID
-  Future<void> _addTransactionId() async {
+  // Calculate total amount based on the user's cart items
+  Future<void> _calculateTotalAmount() async {
+    if (_uid != null) {
+      try {
+        QuerySnapshot snapshot = await _firestore
+            .collection('users')
+            .doc(_uid)
+            .collection('cart') // Reference the 'cart' collection
+            .get();
+
+        int total = 0;
+        for (var doc in snapshot.docs) {
+          Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
+          int price = data['price'] ?? 0;
+          int quantity = data['quantity'] ?? 1;
+          total += price * quantity;
+        }
+
+        setState(() {
+          _totalAmount = total; // Update total amount
+        });
+      } catch (e) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error calculating total: $e')),
+        );
+      }
+    }
+  }
+
+  void _simulatePayment() {
+    setState(() {
+      _isPaid = true;
+    });
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+          content:
+              Text('Payment successful! Please enter the transaction ID.')),
+    );
+  }
+
+  Future<void> _addTransactionIdAndOrder() async {
     String transactionId = _transactionIdController.text.trim();
 
-    // Check if the transactionId is not empty and UID is available
     if (transactionId.isNotEmpty && _uid != null) {
       try {
-        // Reference the 'transactions' sub-collection inside the user's document
         await _firestore
-            .collection('users') // Main collection
-            .doc(_uid) // User document
-            .collection('transactions') // Sub-collection
+            .collection('users')
+            .doc(_uid)
+            .collection('transactions')
             .add({
           'transactionId': transactionId,
           'createdAt': FieldValue.serverTimestamp(),
         });
 
-        // Show success message
+        // Save the cart as an order
+        QuerySnapshot cartSnapshot = await _firestore
+            .collection('users')
+            .doc(_uid)
+            .collection('cart')
+            .get();
+
+        for (var doc in cartSnapshot.docs) {
+          Map<String, dynamic> item = doc.data() as Map<String, dynamic>;
+          await _firestore
+              .collection('users')
+              .doc(_uid)
+              .collection(
+                  'orders') // Save order items in 'orders' subcollection
+              .add({
+            'transactionId': transactionId,
+            'itemName': item['Name'],
+            'price': item['Price'],
+            'quantity': item['Quantity'],
+            'createdAt': FieldValue.serverTimestamp(),
+          });
+        }
+
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-              content:
-                  Text('Transaction ID added successfully: $transactionId')),
+          const SnackBar(content: Text('Order details saved successfully!')),
         );
 
-        // Clear input field
         _transactionIdController.clear();
+        setState(() {
+          _isPaid = false;
+        });
       } catch (e) {
-        // Handle any other errors (including Firebase exceptions)
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Error: $e')),
         );
@@ -80,7 +139,6 @@ class _WalletState extends State<Wallet> {
         const SnackBar(content: Text('User UID not found')),
       );
     } else {
-      // Show validation error if transaction ID is empty
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Please enter a valid transaction ID')),
       );
@@ -99,41 +157,52 @@ class _WalletState extends State<Wallet> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Display Image Asset with fixed height and width
-            Container(
+            Text(
+              "Total Amount: ₹$_totalAmount",
+              style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 20),
+            SizedBox(
               height: 250,
               width: 250,
               child: Image.asset('images/qr.jpg'),
             ),
-
             const Text(
-              "QR Code",
-              style: TextStyle(
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
-              ),
+              "Scan and Pay",
+              style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 20),
-            // TextField for entering transaction ID
-            TextField(
-              controller: _transactionIdController,
-              decoration: const InputDecoration(
-                labelText: 'Enter Transaction ID',
-                border: OutlineInputBorder(),
-              ),
-            ),
-            const SizedBox(height: 20),
-            // Button to submit transaction ID
             ElevatedButton(
-              onPressed: _addTransactionId,
-              child: const Text('Submit Transaction ID'),
+              onPressed: _simulatePayment,
               style: ElevatedButton.styleFrom(
                 padding:
                     const EdgeInsets.symmetric(horizontal: 32, vertical: 12),
                 textStyle:
                     const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
               ),
+              child: const Text('Scan and Pay'),
             ),
+            const SizedBox(height: 20),
+            if (_isPaid) ...[
+              TextField(
+                controller: _transactionIdController,
+                decoration: const InputDecoration(
+                  labelText: 'Enter Transaction ID',
+                  border: OutlineInputBorder(),
+                ),
+              ),
+              const SizedBox(height: 20),
+              ElevatedButton(
+                onPressed: _addTransactionIdAndOrder,
+                style: ElevatedButton.styleFrom(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 32, vertical: 12),
+                  textStyle: const TextStyle(
+                      fontSize: 16, fontWeight: FontWeight.bold),
+                ),
+                child: const Text('Submit Transaction ID'),
+              ),
+            ],
           ],
         ),
       ),

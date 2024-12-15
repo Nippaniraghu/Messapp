@@ -1,10 +1,10 @@
-import 'package:collegeproject/pages/cart_provider.dart';
 import 'package:flutter/material.dart';
-import 'package:collegeproject/pages/details.dart';
-import 'package:collegeproject/pages/page1.dart';
-import 'package:collegeproject/pages/pages2.dart';
-import 'package:collegeproject/pages/pages3.dart';
-import 'package:provider/provider.dart';
+import 'package:collegeproject/pages/page1.dart'; // Import GIT page
+import 'package:collegeproject/pages/pages2.dart'; // Import Durga page
+import 'package:collegeproject/pages/pages3.dart'; // Import Shabari page
+import 'package:collegeproject/pages/login.dart'; // Import Login page for logout
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:collegeproject/widget/widget_support.dart';
 
 class Home extends StatefulWidget {
@@ -16,39 +16,59 @@ class Home extends StatefulWidget {
 
 class _HomeState extends State<Home> {
   final TextEditingController _searchController = TextEditingController();
-  final List<Map<String, String>> _items = [
-    {
-      "name": "Veggie Taco Hash",
-      "description": "Fresh and Healthy",
-      "price": "\$25",
-      "image": "images/burger.png"
-    },
-    {
-      "name": "Mix Veg Salad",
-      "description": "Spicy with Onion",
-      "price": "\$28",
-      "image": "images/salad4.png"
-    },
-    {
-      "name": "Mediterranean Chickpea Salad",
-      "description": "Honey goat cheese",
-      "price": "\$28",
-      "image": "images/salad4.png"
-    },
-    {
-      "name": "Veggie Taco Hash",
-      "description": "Honey goat cheese",
-      "price": "\$28",
-      "image": "images/salad2.png"
-    },
-  ];
-
-  List<Map<String, String>> _filteredItems = [];
+  List<Map<String, dynamic>> _filteredItems = [];
+  List<Map<String, dynamic>> _items = [];
+  String _userName = "Guest";
 
   @override
   void initState() {
     super.initState();
-    _filteredItems = _items; // Initialize with all items.
+    _fetchMenuItems();
+    _fetchUserName();
+  }
+
+  Future<void> _fetchMenuItems() async {
+    try {
+      QuerySnapshot snapshot = await FirebaseFirestore.instance
+          .collection('Admin')
+          .doc('git')
+          .collection('menu')
+          .get();
+
+      List<Map<String, dynamic>> items = snapshot.docs.map((doc) {
+        return {
+          'name': doc['Name'],
+          'description': doc['Detail'],
+          'price': double.tryParse(doc['Price'].toString()) ?? 0.0,
+          'image': doc['Image'],
+        };
+      }).toList();
+
+      setState(() {
+        _items = items;
+        _filteredItems = items;
+      });
+    } catch (e) {
+      print("Error fetching menu items: $e");
+    }
+  }
+
+  Future<void> _fetchUserName() async {
+    try {
+      final User? currentUser = FirebaseAuth.instance.currentUser;
+      if (currentUser != null) {
+        DocumentSnapshot userDoc = await FirebaseFirestore.instance
+            .collection('users')
+            .doc(currentUser.uid)
+            .get();
+
+        setState(() {
+          _userName = userDoc['name'] ?? currentUser.displayName ?? "Guest";
+        });
+      }
+    } catch (e) {
+      print("Error fetching user name: $e");
+    }
   }
 
   void _searchItems(String query) {
@@ -58,42 +78,44 @@ class _HomeState extends State<Home> {
       } else {
         _filteredItems = _items
             .where((item) =>
-                item["name"]!.toLowerCase().contains(query.toLowerCase()) ||
-                item["description"]!
-                    .toLowerCase()
-                    .contains(query.toLowerCase()))
+                item['name'].toLowerCase().contains(query.toLowerCase()) ||
+                item['description'].toLowerCase().contains(query.toLowerCase()))
             .toList();
       }
     });
   }
 
   void _onMenuOptionSelected(String value) {
-    if (value == "GIT") {
+    if (value == "Logout") {
+      _signOut();
+    } else if (value == "GIT") {
       Navigator.push(
         context,
-        MaterialPageRoute(
-          builder: (context) => const Pages1(), // Navigate to Page1
-        ),
+        MaterialPageRoute(builder: (context) => const Pages1()),
       );
     } else if (value == "Durga") {
       Navigator.push(
         context,
-        MaterialPageRoute(
-          builder: (context) => const Pages2(), // Navigate to Pages2
-        ),
+        MaterialPageRoute(builder: (context) => const Pages2()),
       );
     } else if (value == "Shabari") {
       Navigator.push(
         context,
-        MaterialPageRoute(
-          builder: (context) => const Pages3(), // Navigate to Pages3
-        ),
+        MaterialPageRoute(builder: (context) => const Pages3()),
       );
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text("$value selected")),
       );
     }
+  }
+
+  Future<void> _signOut() async {
+    await FirebaseAuth.instance.signOut();
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(builder: (context) => const LogIn()),
+    );
   }
 
   Widget _buildHamburgerIcon() {
@@ -115,6 +137,10 @@ class _HomeState extends State<Home> {
             const PopupMenuItem<String>(
               value: "Shabari",
               child: Text("Shabari"),
+            ),
+            const PopupMenuItem<String>(
+              value: "Logout",
+              child: Text("Logout"),
             ),
           ],
         ).then((value) {
@@ -151,37 +177,55 @@ class _HomeState extends State<Home> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Welcome!"),
+        title: Text(
+          "Welcome, $_userName!",
+          style: AppWidget.semiBoldTextFeildStyle(),
+        ),
         actions: [
-          IconButton(
-            icon: const Icon(Icons.shopping_cart),
-            onPressed: () {
-              Navigator.pushNamed(context, '/order'); // Navigate to cart
-            },
-          ),
           Padding(
             padding: const EdgeInsets.only(right: 15.0),
             child: _buildHamburgerIcon(),
+          ),
+          Padding(
+            padding: const EdgeInsets.only(right: 15.0),
+            child: GestureDetector(
+              onTap: _signOut, // Logout functionality
+              child: Container(
+                padding:
+                    const EdgeInsets.symmetric(vertical: 8.0, horizontal: 15.0),
+                decoration: BoxDecoration(
+                  color: Colors.red, // Background color
+                  borderRadius: BorderRadius.circular(10), // Rounded corners
+                ),
+                child: const Text(
+                  "Logout",
+                  style: TextStyle(
+                    color: Colors.white, // Text color
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16, // Text size
+                  ),
+                ),
+              ),
+            ),
           ),
         ],
       ),
       body: SingleChildScrollView(
         child: Container(
-          margin: const EdgeInsets.only(top: 20.0, left: 20.0, right: 20.0),
+          margin: const EdgeInsets.symmetric(vertical: 20.0, horizontal: 20.0),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               const SizedBox(height: 20.0),
-              Text("Delicious Food", style: AppWidget.HeadlineTextFeildStyle()),
-              Text("Discover and Get Great Food",
+              Text("Food Explorer", style: AppWidget.HeadlineTextFeildStyle()),
+              Text("Find Your Favorite Dishes From College Mess",
                   style: AppWidget.LightTextFeildStyle()),
               const SizedBox(height: 20.0),
-              // Search Bar
               TextField(
                 controller: _searchController,
                 onChanged: _searchItems,
                 decoration: InputDecoration(
-                  hintText: "Search for food...",
+                  hintText: "Search for dishes...",
                   prefixIcon: const Icon(Icons.search),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(10.0),
@@ -189,20 +233,9 @@ class _HomeState extends State<Home> {
                 ),
               ),
               const SizedBox(height: 20.0),
-              // Display Items
               ..._filteredItems.map((item) => GestureDetector(
                     onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => Details(
-                            name: item["name"]!,
-                            description: item["description"]!,
-                            price: item["price"]!,
-                            imagePath: item["image"]!,
-                          ),
-                        ),
-                      );
+                      // Navigate to details or further handling
                     },
                     child: Container(
                       margin: const EdgeInsets.symmetric(vertical: 10.0),
@@ -214,8 +247,8 @@ class _HomeState extends State<Home> {
                           child: Row(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Image.asset(
-                                item["image"]!,
+                              Image.network(
+                                item['image'],
                                 height: 120,
                                 width: 120,
                                 fit: BoxFit.cover,
@@ -225,32 +258,17 @@ class _HomeState extends State<Home> {
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    Text(item["name"]!,
+                                    Text(item['name'],
                                         style:
                                             AppWidget.semiBoldTextFeildStyle(),
                                         overflow: TextOverflow.ellipsis),
                                     const SizedBox(height: 5.0),
-                                    Text(item["description"]!,
+                                    Text(item['description'],
                                         style: AppWidget.LightTextFeildStyle()),
                                     const SizedBox(height: 5.0),
-                                    Text(item["price"]!,
+                                    Text("₹ ${item['price']}",
                                         style:
                                             AppWidget.semiBoldTextFeildStyle()),
-                                    const SizedBox(height: 10.0),
-                                    ElevatedButton(
-                                      onPressed: () {
-                                        Provider.of<CartModel>(context,
-                                                listen: false)
-                                            .addItem(item);
-                                        ScaffoldMessenger.of(context)
-                                            .showSnackBar(
-                                          SnackBar(
-                                              content: Text(
-                                                  '${item["name"]} added to cart!')),
-                                        );
-                                      },
-                                      child: const Text("Add to Cart"),
-                                    ),
                                   ],
                                 ),
                               ),

@@ -1,10 +1,10 @@
-import 'dart:io';
-
+import 'dart:io'; // Import dart:io to use File
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:random_string/random_string.dart';
+import 'order_history.dart'; // Import OrderHistory Page
 
 class Profile extends StatefulWidget {
   const Profile({super.key});
@@ -21,33 +21,34 @@ class _ProfileState extends State<Profile> {
   final ImagePicker _picker = ImagePicker();
   File? selectedImage;
 
+  @override
+  void initState() {
+    super.initState();
+    loadUserDetails(); // Load user details when the profile page is initialized
+  }
+
   // Method to load user details from Firestore using UID
   void loadUserDetails() async {
     try {
-      // Get the current authenticated user
       User? user = FirebaseAuth.instance.currentUser;
 
       if (user == null) {
-        // No user is logged in
         setState(() {
           name = 'Guest User';
           email = 'Not Logged In';
-          profile =
-              'https://via.placeholder.com/150'; // Default profile placeholder
+          profile = 'https://via.placeholder.com/150'; // Default placeholder
         });
         return;
       }
 
-      String userId = user.uid; // Firebase UID
+      String userId = user.uid;
 
-      // Fetch the user's document from Firestore
       DocumentSnapshot snapshot = await FirebaseFirestore.instance
           .collection('users')
           .doc(userId)
           .get();
 
       if (!snapshot.exists) {
-        // Document does not exist
         setState(() {
           name = 'Unknown User';
           email = 'No Email';
@@ -56,17 +57,15 @@ class _ProfileState extends State<Profile> {
         return;
       }
 
-      // Safely extract fields with fallback values
       Map<String, dynamic>? userData = snapshot.data() as Map<String, dynamic>?;
 
       setState(() {
         name = userData?['name'] ?? 'Unknown User';
         email = userData?['email'] ?? 'No Email';
         profile = userData?['profile'] ??
-            'https://via.placeholder.com/150'; // Default placeholder
+            'https://media.istockphoto.com/id/1495088043/vector/user-profile-icon-avatar-or-person-icon-profile-picture-portrait-symbol-default-portrait.jpg?s=612x612&w=0&k=20&c=dhV2p1JwmloBTOaGAtaA3AW1KSnjsdMt7-U_3EZElZ0='; // Default placeholder
       });
     } catch (e) {
-      // Handle errors
       print('Error loading user details: $e');
       setState(() {
         name = 'Error Loading User';
@@ -94,15 +93,15 @@ class _ProfileState extends State<Profile> {
       String addId = randomAlphaNumeric(10);
       profile = "UploadedImage_$addId"; // Simulated uploaded image URL
 
-      // Updating profile picture
       setState(() {});
     }
   }
 
-  @override
-  void initState() {
-    super.initState();
-    loadUserDetails(); // Load user details when the profile page is initialized
+  // Method to handle logout
+  Future<void> handleLogout() async {
+    await FirebaseAuth.instance.signOut();
+    Navigator.pushReplacementNamed(
+        context, '/login'); // Navigate to login screen
   }
 
   @override
@@ -110,8 +109,8 @@ class _ProfileState extends State<Profile> {
     return Scaffold(
       body: name == null
           ? const Center(
-              child:
-                  CircularProgressIndicator()) // Show loading indicator while loading data
+              child: CircularProgressIndicator(),
+            )
           : SingleChildScrollView(
               child: Column(
                 children: [
@@ -143,8 +142,7 @@ class _ProfileState extends State<Profile> {
                                 onTap: getImage,
                                 child: selectedImage == null
                                     ? FadeInImage.assetNetwork(
-                                        placeholder:
-                                            'images/placeholder.png', // Your local placeholder image
+                                        placeholder: 'images/placeholder.png',
                                         image: profile!,
                                         height: 120,
                                         width: 120,
@@ -185,32 +183,22 @@ class _ProfileState extends State<Profile> {
                   const SizedBox(height: 30.0),
                   _buildProfileItem(Icons.email, "Email", email!),
                   const SizedBox(height: 30.0),
-                  _buildProfileItem(
-                      Icons.description, "Terms and Condition", ""),
-                  const SizedBox(height: 30.0),
                   GestureDetector(
                     onTap: () {
-                      // Simulated account deletion
-                      setState(() {
-                        name = null;
-                        email = null;
-                        profile = null;
-                      });
+                      // Show Order History Page
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                            builder: (context) => const OrderHistory()),
+                      );
                     },
                     child:
-                        _buildProfileItem(Icons.delete, "Delete Account", ""),
+                        _buildProfileItem(Icons.history, "Order History", ""),
                   ),
                   const SizedBox(height: 30.0),
                   GestureDetector(
-                    onTap: () {
-                      // Simulated logout action
-                      setState(() {
-                        name = "Logged Out User";
-                        email = "shivam@gmail.com";
-                        profile = "https://via.placeholder.com/150";
-                      });
-                    },
-                    child: _buildProfileItem(Icons.logout, "LogOut", ""),
+                    onTap: handleLogout, // Handle logout
+                    child: _buildProfileItem(Icons.logout, "Logout", ""),
                   ),
                 ],
               ),
@@ -218,7 +206,6 @@ class _ProfileState extends State<Profile> {
     );
   }
 
-  // Widget to build profile details in a row format
   Widget _buildProfileItem(IconData icon, String title, String value) {
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 20.0),

@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:collegeproject/pages/home.dart';
 import 'package:collegeproject/pages/order.dart';
 import 'package:collegeproject/pages/profile.dart';
-import 'package:collegeproject/pages/wallet.dart';
 
 class BottomNav extends StatefulWidget {
   const BottomNav({super.key});
@@ -20,15 +19,13 @@ class _BottomNavState extends State<BottomNav> {
   late Home homepage;
   late Profile profile;
   late Order order;
-  late Wallet wallet;
 
   @override
   void initState() {
     homepage = const Home();
     order = const Order();
     profile = const Profile();
-    wallet = const Wallet();
-    pages = [homepage, order, wallet, profile];
+    pages = [homepage, order, profile];
     super.initState();
   }
 
@@ -52,10 +49,6 @@ class _BottomNavState extends State<BottomNav> {
             ),
             Icon(
               Icons.shopping_bag_outlined,
-              color: Colors.white,
-            ),
-            Icon(
-              Icons.wallet_outlined,
               color: Colors.white,
             ),
             Icon(

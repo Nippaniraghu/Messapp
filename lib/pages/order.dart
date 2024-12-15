@@ -1,7 +1,7 @@
+import 'package:collegeproject/pages/wallet.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:collegeproject/widget/widget_support.dart';
-import 'package:flutter_paypal_checkout/flutter_paypal_checkout.dart';
 import 'package:collegeproject/pages/cart_provider.dart'; // Import your CartModel
 
 class Order extends StatefulWidget {
@@ -35,22 +35,15 @@ class _OrderPageState extends State<Order> {
     );
   }
 
-  void _increaseQuantity(int index, List<Map<String, dynamic>> cartItems) {
-    setState(() {
-      cartItems[index]["Quantity"] = (cartItems[index]["Quantity"] as int) + 1;
-      _calculateTotal(cartItems);
-    });
+  // Remove item from cart and Firestore
+  void _removeItemFromCart(int index, List<Map<String, dynamic>> cartItems) {
+    final item = cartItems[index];
+    Provider.of<CartModel>(context, listen: false).removeItem(item);
   }
 
-  void _decreaseQuantity(int index, List<Map<String, dynamic>> cartItems) {
-    setState(() {
-      int currentQuantity = cartItems[index]["Quantity"] as int;
-      if (currentQuantity > 1) {
-        cartItems[index]["Quantity"] =
-            currentQuantity - 1; // Decrement quantity
-        _calculateTotal(cartItems);
-      }
-    });
+  // Clear the entire cart and Firestore
+  void _clearCart(List<Map<String, dynamic>> cartItems) {
+    Provider.of<CartModel>(context, listen: false).clearCart();
   }
 
   Widget _buildCartItem(Map<String, dynamic> item, int index,
@@ -91,32 +84,21 @@ class _OrderPageState extends State<Order> {
                     ),
                     const SizedBox(height: 5.0),
                     Text(
-                      "Price: \$${price.toString()}",
+                      "Price: ₹${price.toString()}",
                       style: AppWidget.LightTextFeildStyle(),
                     ),
                     const SizedBox(height: 5.0),
                     Text(
-                      "Subtotal: \$${(price * quantity).toString()}",
+                      "Subtotal: ₹${(price * quantity).toString()}",
                       style: AppWidget.semiBoldTextFeildStyle(),
                     ),
                   ],
                 ),
               ),
-              Row(
-                children: [
-                  IconButton(
-                    onPressed: () => _decreaseQuantity(index, cartItems),
-                    icon: const Icon(Icons.remove_circle_outline),
-                  ),
-                  Text(
-                    item["Quantity"].toString(),
-                    style: AppWidget.boldTextFeildStyle(),
-                  ),
-                  IconButton(
-                    onPressed: () => _increaseQuantity(index, cartItems),
-                    icon: const Icon(Icons.add_circle_outline),
-                  ),
-                ],
+              IconButton(
+                onPressed: () => _removeItemFromCart(index, cartItems),
+                icon: const Icon(Icons.remove_circle_outline),
+                color: Colors.red,
               ),
             ],
           ),
@@ -136,6 +118,7 @@ class _OrderPageState extends State<Order> {
     );
   }
 
+  // Handle the checkout and clear the cart after successful checkout
   void _handleCheckout(List<Map<String, dynamic>> cartItems) {
     if (totalPrice == 0) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -144,66 +127,19 @@ class _OrderPageState extends State<Order> {
       return;
     }
 
-    // Navigate to the PayPal Checkout Page
-    Navigator.of(context).push(MaterialPageRoute(
-      builder: (BuildContext context) => PaypalCheckout(
-        sandboxMode: true,
-        clientId: "YOUR_PAYPAL_CLIENT_ID",
-        secretKey: "YOUR_PAYPAL_SECRET_KEY",
-        returnURL: "https://xyz123.ngrok.io/success",
-        cancelURL: "https://xyz123.ngrok.io/cancel",
-        transactions: [
-          {
-            "amount": {
-              "total": totalPrice.toString(),
-              "currency": "USD",
-              "details": {
-                "subtotal": totalPrice.toString(),
-                "shipping": '0',
-                "shipping_discount": 0,
-              }
-            },
-            "description": "Food Cart Payment",
-            "item_list": {
-              "items": cartItems.map((item) {
-                return {
-                  "name": item["Name"],
-                  "quantity": item["Quantity"],
-                  "price": item["Price"].toString(),
-                  "currency": "USD",
-                };
-              }).toList(),
-            }
-          }
-        ],
-        note: "Thank you for your purchase!",
-        onSuccess: (Map params) async {
-          print("onSuccess: $params");
+    // Clear the cart locally and in Firestore
+    //Provider.of<CartModel>(context, listen: false).clearCart();
 
-          setState(() {
-            totalPrice = 0;
-            cartItems.clear();
-          });
-
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text("Checkout successful!")),
-          );
-        },
-        onError: (error) {
-          print("onError: $error");
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text("Checkout failed!")),
-          );
-          Navigator.pop(context);
-        },
-        onCancel: () {
-          print('Cancelled');
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text("Checkout cancelled!")),
-          );
-        },
+    // Navigate to the Wallet page
+    Navigator.of(context).pushReplacement(
+      MaterialPageRoute(
+        builder: (BuildContext context) => const Wallet(),
       ),
-    ));
+    );
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text("Checkout successful!")),
+    );
   }
 
   @override
@@ -243,7 +179,7 @@ class _OrderPageState extends State<Order> {
                         style: AppWidget.boldTextFeildStyle(),
                       ),
                       Text(
-                        "\$$totalPrice",
+                        "₹$totalPrice",
                         style: AppWidget.semiBoldTextFeildStyle(),
                       ),
                     ],
@@ -263,6 +199,29 @@ class _OrderPageState extends State<Order> {
                     child: const Center(
                       child: Text(
                         "CheckOut",
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 18.0,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 20.0),
+                GestureDetector(
+                  onTap: () => _clearCart(cart.items),
+                  child: Container(
+                    margin: const EdgeInsets.all(20.0),
+                    padding: const EdgeInsets.symmetric(vertical: 15.0),
+                    width: double.infinity,
+                    decoration: BoxDecoration(
+                      color: Colors.red,
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: const Center(
+                      child: Text(
+                        "Clear Cart",
                         style: TextStyle(
                           color: Colors.white,
                           fontSize: 18.0,

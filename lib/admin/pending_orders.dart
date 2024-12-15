@@ -1,105 +1,228 @@
 import 'package:flutter/material.dart';
-// Ensure this import points to the AddFood file location.
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class PendingOrders extends StatefulWidget {
   const PendingOrders({super.key});
 
   @override
-  State<PendingOrders> createState() => _PendingOrdersState();
+  _PendingOrdersState createState() => _PendingOrdersState();
 }
 
 class _PendingOrdersState extends State<PendingOrders> {
-  final List<String> _pendingOrders = []; // Replace this with actual data
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  int _totalOrders = 0;
+
+  // Function to update the status of a transaction (verified or rejected)
+  Future<void> _updateTransactionStatus(
+      String userId, String transactionId, bool status) async {
+    try {
+      // Update the specific transaction document with the "verified" status
+      await _firestore
+          .collection('users')
+          .doc(userId)
+          .collection('transactions')
+          .doc(transactionId)
+          .update({'verified': status});
+
+      // Show success message
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(status
+              ? 'Transaction verified successfully!'
+              : 'Transaction rejected successfully!'),
+        ),
+      );
+    } catch (e) {
+      // Handle errors
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error updating transaction: $e')),
+      );
+    }
+  }
+
+  // Function to fetch total number of transactions (orders)
+  Future<void> _fetchTotalOrders() async {
+    int totalOrders = 0;
+    try {
+      // Stream to fetch all user documents
+      final userSnapshot = await _firestore.collection('users').get();
+
+      for (var userDoc in userSnapshot.docs) {
+        final userId = userDoc.id;
+
+        // Fetch the transactions for each user
+        final transactionSnapshot = await _firestore
+            .collection('users')
+            .doc(userId)
+            .collection('transactions')
+            .get();
+
+        totalOrders += transactionSnapshot.docs.length;
+      }
+
+      setState(() {
+        _totalOrders = totalOrders;
+      });
+    } catch (e) {
+      // Handle errors
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error fetching total orders: $e')),
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: Colors.blueAccent,
-        title: const Text(
-          'Pending Orders',
-          style: TextStyle(fontWeight: FontWeight.bold),
-        ),
-        centerTitle: true,
-        elevation: 2,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () {
-            // Navigate back to AddFood page
-            // Navigator.pushReplacement(
-            //   context,
-            //   MaterialPageRoute(builder: (context) => const AddFood()),
-            // );
-          },
-        ),
+        title: const Text("Transaction History"),
+        backgroundColor: const Color.fromARGB(255, 220, 63, 63),
       ),
-      body: _pendingOrders.isEmpty ? _buildEmptyState() : _buildOrderList(),
-    );
-  }
-
-  Widget _buildEmptyState() {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
+      body: Column(
         children: [
-          Icon(
-            Icons.inbox,
-            size: 80,
-            color: Colors.grey[400],
-          ),
-          const SizedBox(height: 20),
-          Text(
-            'No pending orders',
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.w500,
-              color: Colors.grey[600],
+          // Button to fetch the total number of orders
+          Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: ElevatedButton(
+              onPressed: _fetchTotalOrders,
+              child: const Text("Fetch Total Orders"),
             ),
           ),
-          const SizedBox(height: 10),
-          Text(
-            'You can relax for now!',
-            style: TextStyle(
-              fontSize: 16,
-              color: Colors.grey[500],
+          // Display total orders
+          Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: Text(
+              'Total Orders: $_totalOrders',
+              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            ),
+          ),
+          Expanded(
+            child: StreamBuilder<QuerySnapshot>(
+              // Stream to fetch all user documents from Firestore
+              stream: _firestore.collection('users').snapshots(),
+              builder: (context, userSnapshot) {
+                if (userSnapshot.connectionState == ConnectionState.waiting) {
+                  return const Center(child: CircularProgressIndicator());
+                }
+
+                if (!userSnapshot.hasData || userSnapshot.data!.docs.isEmpty) {
+                  return const Center(child: Text('No transactions found.'));
+                }
+
+                final userDocs = userSnapshot.data!.docs;
+
+                return ListView.builder(
+                  itemCount: userDocs.length,
+                  itemBuilder: (context, index) {
+                    final userDoc = userDocs[index];
+                    final userId = userDoc.id;
+
+                    return StreamBuilder<QuerySnapshot>(
+                      // Stream to fetch transactions for the current user
+                      stream: _firestore
+                          .collection('users')
+                          .doc(userId)
+                          .collection('transactions')
+                          .orderBy('createdAt', descending: true)
+                          .snapshots(),
+                      builder: (context, transactionSnapshot) {
+                        if (transactionSnapshot.connectionState ==
+                            ConnectionState.waiting) {
+                          return const ListTile(
+                            title: Text("Loading transactions..."),
+                          );
+                        }
+
+                        if (!transactionSnapshot.hasData ||
+                            transactionSnapshot.data!.docs.isEmpty) {
+                          return const SizedBox(); // Skip if no transactions
+                        }
+
+                        final transactionDocs = transactionSnapshot.data!.docs;
+
+                        return Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Padding(
+                              padding: const EdgeInsets.all(8.0),
+                              child: Text(
+                                "User ID: $userId",
+                                style: const TextStyle(
+                                    fontSize: 18, fontWeight: FontWeight.bold),
+                              ),
+                            ),
+                            ...transactionDocs.map((transactionDoc) {
+                              // Ensure data is safely cast to a Map<String, dynamic>
+                              final transactionData = transactionDoc.data()
+                                  as Map<String, dynamic>?;
+
+                              if (transactionData == null) {
+                                return const SizedBox(); // Skip if data is null
+                              }
+
+                              final transactionId = transactionDoc.id;
+                              final transactionText =
+                                  transactionData['transactionId'] ?? 'N/A';
+                              final createdAt = transactionData['createdAt'] !=
+                                      null
+                                  ? (transactionData['createdAt'] as Timestamp)
+                                      .toDate()
+                                      .toString()
+                                  : 'Unknown';
+                              final isVerified =
+                                  transactionData['verified']; // Status field
+
+                              return ListTile(
+                                title: Row(
+                                  children: [
+                                    Expanded(
+                                      child: Text(
+                                        "Transaction ID: $transactionText\nCreated At: $createdAt",
+                                      ),
+                                    ),
+                                    if (isVerified == true)
+                                      const Icon(Icons.check_circle,
+                                          color: Colors.green) // Green Check
+                                    else if (isVerified == false)
+                                      const Icon(Icons.cancel,
+                                          color: Colors.red) // Red Cross
+                                    else
+                                      const SizedBox(), // No status yet
+                                  ],
+                                ),
+                                trailing: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    // Green Button (Mark as Verified)
+                                    IconButton(
+                                      icon: const Icon(Icons.check_circle,
+                                          color: Colors.green),
+                                      onPressed: () => _updateTransactionStatus(
+                                          userId, transactionId, true),
+                                    ),
+                                    // Red Button (Mark as Rejected)
+                                    IconButton(
+                                      icon: const Icon(Icons.cancel,
+                                          color: Colors.red),
+                                      onPressed: () => _updateTransactionStatus(
+                                          userId, transactionId, false),
+                                    ),
+                                  ],
+                                ),
+                              );
+                            }),
+                            const Divider(),
+                          ],
+                        );
+                      },
+                    );
+                  },
+                );
+              },
             ),
           ),
         ],
       ),
-    );
-  }
-
-  Widget _buildOrderList() {
-    return ListView.builder(
-      padding: const EdgeInsets.all(10.0),
-      itemCount: _pendingOrders.length,
-      itemBuilder: (context, index) {
-        return Card(
-          margin: const EdgeInsets.symmetric(vertical: 8),
-          elevation: 3,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(8),
-          ),
-          child: ListTile(
-            leading: CircleAvatar(
-              backgroundColor: Colors.blueAccent,
-              child: Text(
-                _pendingOrders[index][0], // First letter of the order
-                style: const TextStyle(color: Colors.white),
-              ),
-            ),
-            title: Text(
-              _pendingOrders[index],
-              style: const TextStyle(fontWeight: FontWeight.bold),
-            ),
-            subtitle: const Text('Tap to view details'),
-            trailing: const Icon(Icons.chevron_right),
-            onTap: () {
-              // Handle order tap, e.g., navigate to details page
-            },
-          ),
-        );
-      },
     );
   }
 }

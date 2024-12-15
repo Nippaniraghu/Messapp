@@ -3,12 +3,13 @@ import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:random_string/random_string.dart';
-import 'package:url_launcher/url_launcher.dart';
 import 'pending_orders.dart'; // Ensure this import points to the PendingOrders file location.
 
 class AddFood extends StatefulWidget {
-  final String adminID;
-  const AddFood({super.key, required this.adminID});
+  final String adminID; // Receive adminID as a parameter
+
+  const AddFood(
+      {super.key, required this.adminID}); // Pass adminID to the constructor
 
   @override
   State<AddFood> createState() => _AddFoodState();
@@ -20,6 +21,7 @@ class _AddFoodState extends State<AddFood> {
   TextEditingController namecontroller = TextEditingController();
   TextEditingController pricecontroller = TextEditingController();
   TextEditingController detailcontroller = TextEditingController();
+  TextEditingController quantitycontroller = TextEditingController();
   final ImagePicker _picker = ImagePicker();
   XFile? selectedImage;
 
@@ -43,17 +45,12 @@ class _AddFoodState extends State<AddFood> {
   }
 
   uploadItem() async {
-    if (selectedImage != null &&
+    if (widget.adminID != null &&
+        selectedImage != null &&
         namecontroller.text.isNotEmpty &&
         pricecontroller.text.isNotEmpty &&
-        detailcontroller.text.isNotEmpty) {
-      // final price = double.tryParse(pricecontroller.text);
-      // if (price == null) {
-      //   ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-      //     content: Text("Please enter a valid numerical value for price."),
-      //   ));
-      //   return;
-      // }
+        detailcontroller.text.isNotEmpty &&
+        quantitycontroller.text.isNotEmpty) {
       showDialog(
         context: context,
         barrierDismissible: false,
@@ -63,7 +60,7 @@ class _AddFoodState extends State<AddFood> {
         String addId = randomAlphaNumeric(10);
 
         Reference firebaseStorageRef =
-            FirebaseStorage.instance.ref().child("blogImages/$addId");
+            FirebaseStorage.instance.ref().child("foodImages/$addId");
         final imageBytes = await selectedImage!.readAsBytes();
 
         UploadTask task = firebaseStorageRef.putData(imageBytes);
@@ -74,7 +71,7 @@ class _AddFoodState extends State<AddFood> {
         final downloadUrl = await (await task).ref.getDownloadURL();
         final adminMenuRef = FirebaseFirestore.instance
             .collection("Admin")
-            .doc(widget.adminID) // Use the dynamic Admin ID
+            .doc(widget.adminID) // Use the passed adminID
             .collection("menu");
 
         Map<String, dynamic> addItem = {
@@ -83,6 +80,7 @@ class _AddFoodState extends State<AddFood> {
           "Price": pricecontroller.text,
           "Detail": detailcontroller.text,
           "Category": value,
+          "Quantity": quantitycontroller.text,
         };
         await adminMenuRef.add(addItem);
 
@@ -97,6 +95,7 @@ class _AddFoodState extends State<AddFood> {
           namecontroller.clear();
           pricecontroller.clear();
           detailcontroller.clear();
+          quantitycontroller.clear();
           selectedImage = null;
           value = null;
         });
@@ -110,17 +109,6 @@ class _AddFoodState extends State<AddFood> {
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
         content: Text("Please fill in all fields and select an image."),
       ));
-    }
-  }
-
-  // Function to open a web page
-  Future<void> openWebPage(String url) async {
-    final Uri uri = Uri.parse(url);
-
-    if (await canLaunchUrl(uri)) {
-      await launchUrl(uri, mode: LaunchMode.externalApplication);
-    } else {
-      throw 'Could not launch $url';
     }
   }
 
@@ -145,27 +133,6 @@ class _AddFoodState extends State<AddFood> {
             color: Colors.black,
           ),
         ),
-        actions: [
-          Container(
-            decoration: BoxDecoration(
-              border: Border.all(color: Colors.blueAccent, width: 2.0),
-              borderRadius: BorderRadius.circular(8.0),
-            ),
-            child: TextButton(
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                      builder: (context) => const PendingOrders()),
-                );
-              },
-              child: const Text(
-                "Orders",
-                style: TextStyle(fontSize: 16, color: Colors.blueAccent),
-              ),
-            ),
-          ),
-        ],
         backgroundColor: Colors.white,
       ),
       body: Stack(
@@ -234,40 +201,12 @@ class _AddFoodState extends State<AddFood> {
                   const SizedBox(height: 30.0),
                   buildTextField("Item Price", pricecontroller),
                   const SizedBox(height: 30.0),
+                  buildTextField("Item Quantity", quantitycontroller),
+                  const SizedBox(height: 30.0),
                   buildTextField("Item Detail", detailcontroller, maxLines: 6),
                   const SizedBox(height: 20.0),
-                  //   const Text(
-                  //     "Select Category",
-                  //     style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-                  //   ),
-                  //   const SizedBox(height: 20.0),
-                  //   buildDropdown(),
-                  //   const SizedBox(height: 30.0),
                   buildButton("Add", uploadItem),
                 ],
-              ),
-            ),
-          ),
-          Positioned(
-            top: 80, // Adjust to move the button slightly down
-            right: 20, // Keep the button aligned to the right
-            child: ElevatedButton.icon(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.black, // Background color
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-              ),
-              onPressed: () {
-                openWebPage(
-                    "https://console.firebase.google.com/project/mess-app-ec79e/analytics/app/android:com.example.messapp/overview/reports~2Fdashboard%3Fr%3Dfirebase-overview&fpn%3D433969056606?fb_gclid=Cj0KCQiAgdC6BhCgARIsAPWNWH2i4OTOouzQ33Hafd75EmlEPx5_TrmLZS0a1oalFqfiSxnOg0_rumYaAkXoEALw_wcB");
-              },
-              icon: const Icon(Icons.analytics_outlined, color: Colors.white),
-              label: const Text(
-                "Analytics",
-                style: TextStyle(fontSize: 16, color: Colors.white),
               ),
             ),
           ),
@@ -305,38 +244,6 @@ class _AddFoodState extends State<AddFood> {
       ],
     );
   }
-
-  // Widget buildDropdown() {
-  //   return Container(
-  //     padding: const EdgeInsets.symmetric(horizontal: 10.0),
-  //     width: MediaQuery.of(context).size.width,
-  //     decoration: BoxDecoration(
-  //         color: const Color(0xFFececf8),
-  //         borderRadius: BorderRadius.circular(10)),
-  //     child: DropdownButtonHideUnderline(
-  //       child: DropdownButton<String>(
-  //         items: fooditems
-  //             .map((item) => DropdownMenuItem<String>(
-  //                   value: item,
-  //                   child: Text(
-  //                     item,
-  //                     style:
-  //                         const TextStyle(fontSize: 18.0, color: Colors.black),
-  //                   ),
-  //                 ))
-  //             .toList(),
-  //         onChanged: ((value) => setState(() {
-  //               this.value = value;
-  //             })),
-  //         dropdownColor: Colors.white,
-  //         hint: const Text("Select Category"),
-  //         iconSize: 36,
-  //         icon: const Icon(Icons.arrow_drop_down, color: Colors.black),
-  //         value: value,
-  //       ),
-  //     ),
-  //   );
-  // }
 
   Widget buildButton(String label, VoidCallback onPressed) {
     return GestureDetector(

@@ -1,3 +1,5 @@
+import 'package:collegeproject/admin/admin_login.dart';
+import 'package:collegeproject/pages/login.dart';
 import 'package:flutter/material.dart';
 import 'package:collegeproject/pages/signup.dart';
 import 'package:collegeproject/widget/content_model.dart';
@@ -84,8 +86,7 @@ class _OnboardState extends State<Onboard> {
           GestureDetector(
             onTap: () {
               if (currentIndex == contents.length - 1) {
-                Navigator.pushReplacement(context,
-                    MaterialPageRoute(builder: (context) => const SignUp()));
+                _showUserTypeDialog(context);
               }
               _controller.nextPage(
                   duration: const Duration(milliseconds: 100),
@@ -120,6 +121,72 @@ class _OnboardState extends State<Onboard> {
       margin: const EdgeInsets.only(right: 5),
       decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(6), color: Colors.black38),
+    );
+  }
+
+  void _showUserTypeDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text("Who are you?"),
+          content:
+              const Text("Please select whether you are an Admin or a User."),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context);
+                Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(builder: (context) => const AdminLogin()),
+                );
+              },
+              child: const Text("Admin"),
+            ),
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context);
+                _showUserStatusDialog(context);
+              },
+              child: const Text("User"),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void _showUserStatusDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text("Are you an existing user?"),
+          content: const Text("Please select your status."),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context);
+                Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(builder: (context) => const LogIn()),
+                );
+              },
+              child: const Text("Existing User"),
+            ),
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context);
+                Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(builder: (context) => const SignUp()),
+                );
+              },
+              child: const Text("New User"),
+            ),
+          ],
+        );
+      },
     );
   }
 }

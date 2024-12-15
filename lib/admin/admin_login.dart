@@ -1,6 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:collegeproject/admin/add_food.dart';
 import 'package:flutter/material.dart';
+import 'home_admin.dart'; // Make sure to import HomeAdmin file
 
 class AdminLogin extends StatefulWidget {
   const AdminLogin({super.key});
@@ -186,10 +186,7 @@ class _AdminLoginState extends State<AdminLogin> {
           Navigator.pushReplacement(
             context,
             MaterialPageRoute(builder: (context) {
-              var adminId2 = adminId;
-              return AddFood(
-                adminID: adminId2,
-              );
+              return HomeAdmin(adminID: adminId); // Pass the adminID here
             }),
           );
         } else {

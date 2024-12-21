@@ -8,6 +8,9 @@ class CartModel extends ChangeNotifier {
 
   // Firestore instance
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  Function? onErrorCallback; // Callback for error handling
+  Function? onSuccessCallback; // Callback for success message
+  bool isOperationSuccessful = true;
 
   // Constructor that retrieves the userId directly from FirebaseAuth
   CartModel() {
@@ -29,9 +32,38 @@ class CartModel extends ChangeNotifier {
 
   // Add item to cart and save to Firestore
   void addItem(Map<String, dynamic> item) {
-    _items.add(item);
-    notifyListeners();
-    _saveItemToFirestore(item);
+    isOperationSuccessful = true;
+    // Check if the item has the same adminid as items already in the cart
+    if (_items.isEmpty) {
+      _items.add(item); // If cart is empty, add the item
+      notifyListeners();
+      _saveItemToFirestore(item);
+    } else {
+      // Check if all existing items in the cart have the same adminid
+      bool canAdd = true;
+      for (var cartItem in _items) {
+        if (cartItem['adminId'] != item['adminId']) {
+          canAdd = false;
+          break; // If there's a mismatch in adminid, stop checking
+        }
+      }
+
+      if (canAdd) {
+        _items.add(item); // Add item if adminid is consistent
+        notifyListeners();
+        _saveItemToFirestore(item);
+        if (onSuccessCallback != null && isOperationSuccessful) {
+          onSuccessCallback!();
+        }
+      } else {
+        // If the adminid is different, show a message or handle accordingly
+        if (onErrorCallback != null) {
+          isOperationSuccessful = false;
+          onErrorCallback!();
+        }
+        print("Cannot add item from different admin to cart.");
+      }
+    }
   }
 
   // Remove item from cart and save to Firestore

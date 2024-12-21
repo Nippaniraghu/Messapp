@@ -16,6 +16,7 @@ class _Pages1State extends State<Pages1> {
   final TextEditingController _searchController = TextEditingController();
   List<Map<String, dynamic>> _filteredItems = [];
   List<Map<String, dynamic>> _items = [];
+  final String adminId = "git";
 
   @override
   void initState() {
@@ -41,6 +42,7 @@ class _Pages1State extends State<Pages1> {
           'description': doc['Detail'],
           'price': price,
           'image': doc['Image'], // You may need to store the image URL here
+          'adminid': adminId,
         };
         items.add(item);
       }
@@ -190,6 +192,7 @@ class _Pages1State extends State<Pages1> {
                             description: item["description"]!,
                             price: item["price"].toString(),
                             imagePath: item["image"]!,
+                            adminId: adminId,
                           ),
                         ),
                       );

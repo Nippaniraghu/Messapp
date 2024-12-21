@@ -3,7 +3,7 @@ import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:random_string/random_string.dart';
-import 'pending_orders.dart'; // Ensure this import points to the PendingOrders file location.
+// Ensure this import points to the PendingOrders file location.
 
 class AddFood extends StatefulWidget {
   final String adminID; // Receive adminID as a parameter
@@ -45,8 +45,7 @@ class _AddFoodState extends State<AddFood> {
   }
 
   uploadItem() async {
-    if (widget.adminID != null &&
-        selectedImage != null &&
+    if (selectedImage != null &&
         namecontroller.text.isNotEmpty &&
         pricecontroller.text.isNotEmpty &&
         detailcontroller.text.isNotEmpty &&

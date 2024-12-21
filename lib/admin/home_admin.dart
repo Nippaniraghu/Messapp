@@ -1,3 +1,4 @@
+import 'package:collegeproject/admin/OrderHistory.dart';
 import 'package:flutter/material.dart';
 import 'package:collegeproject/admin/add_food.dart';
 import 'package:collegeproject/admin/inventory.dart';
@@ -101,6 +102,19 @@ class HomeAdmin extends StatelessWidget {
                     context,
                     MaterialPageRoute(
                       builder: (context) => const PendingOrders(),
+                    ),
+                  );
+                },
+              ),
+              _buildAdminButton(
+                context,
+                icon: Icons.history,
+                label: 'Order History',
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => OrderHistoryPage(adminID: adminID),
                     ),
                   );
                 },

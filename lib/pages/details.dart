@@ -8,12 +8,15 @@ class Details extends StatefulWidget {
   final String description;
   final String price;
   final String imagePath;
-  const Details(
-      {super.key,
-      required this.name,
-      required this.description,
-      required this.price,
-      required this.imagePath});
+  final String adminId;
+  const Details({
+    super.key,
+    required this.name,
+    required this.description,
+    required this.price,
+    required this.imagePath,
+    required this.adminId, // Include adminid here
+  });
 
   @override
   State<Details> createState() => _DetailsState();
@@ -154,7 +157,7 @@ class _DetailsState extends State<Details> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        "₹${totalPrice.toStringAsFixed(2)}",
+                        "₹$totalPrice",
                         style: AppWidget.semiBoldTextFeildStyle(),
                       ),
                     ],
@@ -163,12 +166,33 @@ class _DetailsState extends State<Details> {
                     onTap: () {
                       final cart =
                           Provider.of<CartModel>(context, listen: false);
+                      cart.onErrorCallback = () {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text(
+                                "Cannot add item from a different admin to the cart!"),
+                            duration: Duration(seconds: 2),
+                          ),
+                        );
+                      };
+
+                      cart.onSuccessCallback = () {
+                        if (cart.isOperationSuccessful) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text("Item added to cart!"),
+                              duration: Duration(seconds: 2),
+                            ),
+                          );
+                        }
+                      };
 
                       cart.addItem({
                         "Name": widget.name,
                         "Quantity": a.toString(),
                         "Image": widget.imagePath,
                         "Price": widget.price,
+                        "adminId": widget.adminId,
                       });
 
                       ScaffoldMessenger.of(context).showSnackBar(

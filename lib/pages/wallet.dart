@@ -1,7 +1,10 @@
+import 'package:collegeproject/pages/cart_provider.dart';
+import 'package:collegeproject/pages/ratings_page.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:provider/provider.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -23,6 +26,7 @@ class _WalletState extends State<Wallet> {
   String? _uid;
   bool _isPaid = false;
   int _totalAmount = 0;
+  String? _adminId;
 
   @override
   void initState() {
@@ -37,6 +41,7 @@ class _WalletState extends State<Wallet> {
         _uid = user.uid;
       });
       _calculateTotalAmount(); // Fetch total amount after UID is set
+      _getAdminId();
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('User not logged in')),
@@ -57,9 +62,15 @@ class _WalletState extends State<Wallet> {
         int total = 0;
         for (var doc in snapshot.docs) {
           Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
-          int price = data['price'] ?? 0;
-          int quantity = data['quantity'] ?? 1;
+
+          // Safely parse price and quantity
+          int price = int.tryParse(data['Price']?.toString() ?? "0") ?? 0;
+          int quantity = int.tryParse(data['Quantity']?.toString() ?? "1") ?? 1;
+
           total += price * quantity;
+
+          // Debugging print statements
+          print("Item: ${data['Name']}, Price: $price, Quantity: $quantity");
         }
 
         setState(() {
@@ -69,6 +80,28 @@ class _WalletState extends State<Wallet> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Error calculating total: $e')),
         );
+      }
+    }
+  }
+
+  Future<void> _getAdminId() async {
+    if (_uid != null) {
+      try {
+        QuerySnapshot snapshot = await _firestore
+            .collection('users')
+            .doc(_uid)
+            .collection('cart')
+            .limit(1) // Assuming there's at least one item in the cart
+            .get();
+
+        if (snapshot.docs.isNotEmpty) {
+          setState(() {
+            _adminId = snapshot
+                .docs.first['adminId']; // Get adminId from the first cart item
+          });
+        }
+      } catch (e) {
+        print('Error fetching adminId: $e');
       }
     }
   }
@@ -96,7 +129,14 @@ class _WalletState extends State<Wallet> {
             .add({
           'transactionId': transactionId,
           'createdAt': FieldValue.serverTimestamp(),
+          'adminId': _adminId,
         });
+
+        // Calculate total amount for the order
+        int totalPrice = _totalAmount;
+
+        // Create a new order ID, could be a custom string or auto-generated
+        String orderId = _firestore.collection('Orders').doc().id;
 
         // Save the cart as an order
         QuerySnapshot cartSnapshot = await _firestore
@@ -104,22 +144,47 @@ class _WalletState extends State<Wallet> {
             .doc(_uid)
             .collection('cart')
             .get();
+        List<Map<String, dynamic>> orderItems = [];
 
         for (var doc in cartSnapshot.docs) {
           Map<String, dynamic> item = doc.data() as Map<String, dynamic>;
+
+          // Safely parse price and quantity
+          int price = int.tryParse(item['Price']!.toString()) ?? 0;
+          int quantity = int.tryParse(item['Quantity']!.toString() ?? "1") ?? 1;
+
+          orderItems.add({
+            'itemName': item['Name'],
+            'price': price,
+            'quantity': quantity,
+          });
+
           await _firestore
               .collection('users')
               .doc(_uid)
-              .collection(
-                  'orders') // Save order items in 'orders' subcollection
+              .collection('orders')
               .add({
             'transactionId': transactionId,
             'itemName': item['Name'],
-            'price': item['Price'],
-            'quantity': item['Quantity'],
+            'price': price,
+            'quantity': quantity,
             'createdAt': FieldValue.serverTimestamp(),
+            'adminId': _adminId,
+            'orderId': orderId,
           });
         }
+        // Add order details to the "Orders" collection with total price and adminId
+        await _firestore.collection('Orders').doc(orderId).set({
+          'orderId': orderId,
+          'transactionId': transactionId,
+          'totalPrice': totalPrice,
+          'adminId': _adminId,
+          'userId': _uid,
+          'items': orderItems,
+          'createdAt': FieldValue.serverTimestamp(),
+        });
+        final cartProvider = Provider.of<CartModel>(context, listen: false);
+        cartProvider.clearCart();
 
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Order details saved successfully!')),
@@ -129,6 +194,12 @@ class _WalletState extends State<Wallet> {
         setState(() {
           _isPaid = false;
         });
+
+        // Navigate to the RatingPage
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => const RatingPage()),
+        );
       } catch (e) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Error: $e')),
@@ -145,13 +216,44 @@ class _WalletState extends State<Wallet> {
     }
   }
 
+  // Future<void> _clearCart() async {
+  //   if (_uid != null) {
+  //     try {
+  //       QuerySnapshot cartSnapshot = await _firestore
+  //           .collection('users')
+  //           .doc(_uid)
+  //           .collection('cart')
+  //           .get();
+
+  //       for (var doc in cartSnapshot.docs) {
+  //         await doc.reference.delete();
+  //       }
+
+  //       // Optionally update the UI here
+  //       setState(() {
+  //         _totalAmount = 0;
+  //       });
+
+  //       print("Cart cleared!");
+  //     } catch (e) {
+  //       ScaffoldMessenger.of(context).showSnackBar(
+  //         SnackBar(content: Text('Error clearing cart: $e')),
+  //       );
+  //     }
+  //   }
+  // }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Wallet"),
-        backgroundColor: Colors.black,
-      ),
+          title: const Text(
+            "Wallet",
+            style: TextStyle(color: Colors.black),
+          ),
+          backgroundColor: Colors.white,
+          iconTheme: const IconThemeData(color: Colors.black),
+          automaticallyImplyLeading: true),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(

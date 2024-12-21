@@ -1,10 +1,7 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 
 class InventoryPage extends StatefulWidget {
-  final String adminID;
-
-  const InventoryPage({super.key, required this.adminID});
+  const InventoryPage({super.key, required String adminID});
 
   @override
   State<InventoryPage> createState() => _InventoryPageState();
@@ -13,82 +10,35 @@ class InventoryPage extends StatefulWidget {
 class _InventoryPageState extends State<InventoryPage> {
   final TextEditingController nameController = TextEditingController();
   final TextEditingController quantityController = TextEditingController();
-  final TextEditingController thresholdController = TextEditingController();
+  final TextEditingController targetController = TextEditingController();
 
   List<Map<String, dynamic>> inventory = [];
+  bool isLowStock = false;
 
-  // Fetch inventory items from Firestore
-  Future<void> fetchInventory() async {
-    try {
-      final snapshot = await FirebaseFirestore.instance
-          .collection('Admin')
-          .doc(widget.adminID)
-          .collection('inventory')
-          .get();
-
-      setState(() {
-        inventory = snapshot.docs
-            .map((doc) => {
-                  'name': doc['name'],
-                  'quantity': doc['quantity'],
-                  'threshold': doc['threshold'],
-                })
-            .toList();
-      });
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error fetching inventory: $e')),
-      );
-    }
-  }
-
-  @override
-  void initState() {
-    super.initState();
-    fetchInventory(); // Load inventory when the page is initialized
-  }
-
-  // Add new inventory item to Firestore
-  void addInventoryItem() async {
+  // Add an item to the inventory
+  void addInventoryItem() {
     String name = nameController.text.trim();
     double quantity = double.tryParse(quantityController.text.trim()) ?? 0.0;
-    double threshold = double.tryParse(thresholdController.text.trim()) ?? 0.0;
+    double target = double.tryParse(targetController.text.trim()) ?? 0.0;
 
-    if (name.isNotEmpty && quantity > 0 && threshold > 0) {
-      try {
-        // Add the new inventory item to Firestore
-        await FirebaseFirestore.instance
-            .collection('Admin')
-            .doc(widget.adminID)
-            .collection('inventory')
-            .add({
+    // Ensure inputs are valid
+    if (name.isNotEmpty && quantity > 0 && target > 0) {
+      setState(() {
+        inventory.add({
           'name': name,
           'quantity': quantity,
-          'threshold': threshold,
+          'target': target,
         });
+      });
 
-        // Update the local list and show success message
-        setState(() {
-          inventory.add({
-            'name': name,
-            'quantity': quantity,
-            'threshold': threshold,
-          });
-        });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('$name added successfully!')),
+      );
 
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('$name added successfully!')),
-        );
-
-        // Clear input fields after adding item
-        nameController.clear();
-        quantityController.clear();
-        thresholdController.clear();
-      } catch (e) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error adding item: $e')),
-        );
-      }
+      // Clear fields after adding item
+      nameController.clear();
+      quantityController.clear();
+      targetController.clear();
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Please enter valid inputs!')),
@@ -96,31 +46,46 @@ class _InventoryPageState extends State<InventoryPage> {
     }
   }
 
-  // Notify if stock is low based on the threshold
-  void notifyLowStock(String name, double quantity, double threshold) {
-    if (quantity <= threshold) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Text('ALERT: $name is low on stock! ($quantity kg left)'),
-      ));
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Text('$name has sufficient stock. ($quantity kg left)'),
-      ));
+  // Update stock and check if it's below the target
+  void updateStock(int index) {
+    String quantityText = quantityController.text.trim();
+
+    if (quantityText.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please enter a valid quantity!')),
+      );
+      return;
     }
+
+    double newQuantity = double.tryParse(quantityText) ?? 0.0;
+
+    // Validate if the new quantity is positive
+    if (newQuantity <= 0) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Quantity must be greater than zero!')),
+      );
+      return;
+    }
+
+    setState(() {
+      inventory[index]['quantity'] = newQuantity;
+
+      // Check if stock is below target
+      isLowStock = newQuantity < inventory[index]['target'];
+    });
+
+    quantityController.clear();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text(
-          'Inventory Management',
-          style: TextStyle(fontWeight: FontWeight.bold),
-        ),
+        title: const Text('Inventory Management'),
         backgroundColor: Colors.teal.shade700,
-        centerTitle: true,
       ),
       body: Container(
+        // Stylish gradient background
         decoration: BoxDecoration(
           gradient: LinearGradient(
             colors: [Colors.teal.shade100, Colors.teal.shade400],
@@ -132,112 +97,106 @@ class _InventoryPageState extends State<InventoryPage> {
           padding: const EdgeInsets.all(16.0),
           child: Column(
             children: [
-              // Input Fields with Cards for Better UI
-              Card(
-                color: Colors.white.withOpacity(0.9),
-                elevation: 5,
-                shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12)),
-                child: Padding(
-                  padding: const EdgeInsets.all(12.0),
-                  child: Column(
-                    children: [
-                      TextField(
-                        controller: nameController,
-                        decoration: const InputDecoration(
-                          labelText: 'Item Name',
-                          border: OutlineInputBorder(),
-                        ),
-                      ),
-                      const SizedBox(height: 10),
-                      TextField(
-                        controller: quantityController,
-                        decoration: const InputDecoration(
-                          labelText: 'Quantity (kg)',
-                          border: OutlineInputBorder(),
-                        ),
-                        keyboardType: TextInputType.number,
-                      ),
-                      const SizedBox(height: 10),
-                      TextField(
-                        controller: thresholdController,
-                        decoration: const InputDecoration(
-                          labelText: 'Threshold (kg)',
-                          border: OutlineInputBorder(),
-                        ),
-                        keyboardType: TextInputType.number,
-                      ),
-                    ],
-                  ),
-                ),
+              // Input fields to add an item
+              TextField(
+                controller: nameController,
+                decoration: const InputDecoration(labelText: 'Item Name'),
               ),
               const SizedBox(height: 10),
-
-              // Add Item Button
+              TextField(
+                controller: quantityController,
+                decoration: const InputDecoration(labelText: 'Quantity (kg)'),
+                keyboardType: TextInputType.number,
+              ),
+              const SizedBox(height: 10),
+              TextField(
+                controller: targetController,
+                decoration: const InputDecoration(labelText: 'Target (kg)'),
+                keyboardType: TextInputType.number,
+              ),
+              const SizedBox(height: 20),
               ElevatedButton(
                 onPressed: addInventoryItem,
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.teal.shade700,
-                  foregroundColor: Colors.white,
+                  backgroundColor: Colors.orange.shade600,
                   padding:
                       const EdgeInsets.symmetric(horizontal: 40, vertical: 15),
-                  shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12)),
                 ),
-                child: const Text(
-                  'Add Item',
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                ),
+                child: const Text('Add Item'),
               ),
-
-              const SizedBox(height: 15),
-
-              // Inventory List Header
+              const SizedBox(height: 20),
+              // Inventory List
               const Text(
                 'Inventory List',
-                style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white),
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
               ),
-              const SizedBox(height: 10),
-
-              // Inventory List Display
               Expanded(
                 child: ListView.builder(
                   itemCount: inventory.length,
                   itemBuilder: (context, index) {
                     final item = inventory[index];
                     return Card(
+                      margin: const EdgeInsets.symmetric(vertical: 10),
                       elevation: 4,
-                      shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12)),
                       child: ListTile(
                         title: Text(
                           item['name'],
                           style: const TextStyle(fontWeight: FontWeight.bold),
                         ),
                         subtitle: Text(
-                          'Quantity: ${item['quantity']} kg | Threshold: ${item['threshold']} kg',
+                          'Quantity: ${item['quantity']} kg | Target: ${item['target']} kg',
                         ),
                         trailing: ElevatedButton(
                           onPressed: () {
-                            notifyLowStock(item['name'], item['quantity'],
-                                item['threshold']);
+                            updateStock(index);
                           },
                           style: ElevatedButton.styleFrom(
                             backgroundColor: Colors.orange.shade600,
                           ),
-                          child: const Text(
-                            'Check Stock',
-                            style: TextStyle(color: Colors.white),
-                          ),
+                          child: const Text('Update Stock'),
                         ),
                       ),
                     );
                   },
                 ),
               ),
+              const SizedBox(height: 20),
+              // Big Red or Green Button for Stock Status
+              inventory.isNotEmpty
+                  ? isLowStock
+                      ? ElevatedButton(
+                          onPressed: () {},
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.red,
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 40, vertical: 15),
+                          ),
+                          child: const Text(
+                            'ALERT: Low Stock!',
+                            style: TextStyle(
+                              fontSize: 18,
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        )
+                      : ElevatedButton(
+                          onPressed: () {},
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.green,
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 40, vertical: 15),
+                          ),
+                          child: const Text(
+                            'Stock is Sufficient!',
+                            style: TextStyle(
+                              fontSize: 18,
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        )
+                  : const SizedBox(),
             ],
           ),
         ),

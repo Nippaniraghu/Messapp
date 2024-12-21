@@ -97,13 +97,6 @@ class _ProfileState extends State<Profile> {
     }
   }
 
-  // Method to handle logout
-  Future<void> handleLogout() async {
-    await FirebaseAuth.instance.signOut();
-    Navigator.pushReplacementNamed(
-        context, '/login'); // Navigate to login screen
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -194,11 +187,6 @@ class _ProfileState extends State<Profile> {
                     },
                     child:
                         _buildProfileItem(Icons.history, "Order History", ""),
-                  ),
-                  const SizedBox(height: 30.0),
-                  GestureDetector(
-                    onTap: handleLogout, // Handle logout
-                    child: _buildProfileItem(Icons.logout, "Logout", ""),
                   ),
                 ],
               ),

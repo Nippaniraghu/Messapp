@@ -247,13 +247,19 @@ class _WalletState extends State<Wallet> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-          title: const Text(
-            "Wallet",
-            style: TextStyle(color: Colors.black),
-          ),
-          backgroundColor: Colors.white,
-          iconTheme: const IconThemeData(color: Colors.black),
-          automaticallyImplyLeading: true),
+        title: const Text(
+          "Wallet",
+          style: TextStyle(color: Colors.black),
+        ),
+        backgroundColor: Colors.white,
+        iconTheme: const IconThemeData(color: Colors.black),
+        // leading: IconButton(
+        //   icon: const Icon(Icons.arrow_back),
+        //   onPressed: () {
+        //     Navigator.of(context).pop(); // Navigate back to the previous page
+        //   },
+        // ),
+      ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(

@@ -54,7 +54,7 @@ class _OrderHistoryState extends State<OrderHistory> {
     return Scaffold(
       appBar: AppBar(
         title: const Text("Order History"),
-        backgroundColor: Colors.black,
+        backgroundColor: Colors.white,
       ),
       body: _uid == null
           ? const Center(child: Text("User not logged in"))

@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 class PendingOrders extends StatefulWidget {
-  const PendingOrders({super.key});
+  final String adminId;
+
+  const PendingOrders({super.key, required this.adminId});
 
   @override
   _PendingOrdersState createState() => _PendingOrdersState();
@@ -16,59 +18,105 @@ class _PendingOrdersState extends State<PendingOrders> {
   Future<void> _updateTransactionStatus(
       String userId, String transactionId, bool status) async {
     try {
-      // Update the specific transaction document with the "verified" status
-      await _firestore
-          .collection('users')
-          .doc(userId)
-          .collection('transactions')
-          .doc(transactionId)
-          .update({'verified': status});
+      // Show confirmation dialog before updating
+      bool? confirmUpdate = await _showConfirmationDialog();
+      if (confirmUpdate == true) {
+        // Fetch the transaction document
+        final transactionDoc = await _firestore
+            .collection('users')
+            .doc(userId)
+            .collection('transactions')
+            .doc(transactionId)
+            .get();
 
-      // Show success message
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(status
-              ? 'Transaction verified successfully!'
-              : 'Transaction rejected successfully!'),
-        ),
-      );
+        if (transactionDoc.exists) {
+          final transactionData =
+              transactionDoc.data() as Map<String, dynamic>?;
+
+          // Check if the adminId matches
+          if (transactionData != null &&
+              transactionData['adminId'] == widget.adminId) {
+            // Update the transaction's status
+            await transactionDoc.reference.update({'verified': status});
+
+            // Show success message
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(status
+                    ? 'Transaction verified successfully!'
+                    : 'Transaction rejected successfully!'),
+              ),
+            );
+            // Hide the transaction from the pending orders list by removing it
+            setState(() {
+              // _fetchTotalOrders() will be triggered to update the list
+            });
+          } else {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                  content: Text(
+                      'You are not authorized to update this transaction.')),
+            );
+          }
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Transaction not found.')),
+          );
+        }
+      }
     } catch (e) {
-      // Handle errors
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Error updating transaction: $e')),
       );
     }
   }
 
-  // Function to fetch total number of transactions (orders)
+  // Function to fetch the total number of transactions (orders)
   Future<void> _fetchTotalOrders() async {
     int totalOrders = 0;
     try {
-      // Stream to fetch all user documents
-      final userSnapshot = await _firestore.collection('users').get();
+      final transactionSnapshot = await _firestore
+          .collectionGroup('transactions')
+          .where('adminId', isEqualTo: widget.adminId)
+          .get();
 
-      for (var userDoc in userSnapshot.docs) {
-        final userId = userDoc.id;
-
-        // Fetch the transactions for each user
-        final transactionSnapshot = await _firestore
-            .collection('users')
-            .doc(userId)
-            .collection('transactions')
-            .get();
-
-        totalOrders += transactionSnapshot.docs.length;
-      }
+      totalOrders = transactionSnapshot.docs.length;
 
       setState(() {
         _totalOrders = totalOrders;
       });
     } catch (e) {
-      // Handle errors
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Error fetching total orders: $e')),
       );
     }
+  }
+
+  // Function to show a confirmation dialog
+  Future<bool?> _showConfirmationDialog() async {
+    return await showDialog<bool>(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Confirm Order'),
+          content: const Text('Do you want to confirm this order?'),
+          actions: <Widget>[
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop(false); // User pressed No
+              },
+              child: const Text('No'),
+            ),
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop(true); // User pressed Yes
+              },
+              child: const Text('Yes'),
+            ),
+          ],
+        );
+      },
+    );
   }
 
   @override
@@ -80,7 +128,6 @@ class _PendingOrdersState extends State<PendingOrders> {
       ),
       body: Column(
         children: [
-          // Button to fetch the total number of orders
           Padding(
             padding: const EdgeInsets.all(8.0),
             child: ElevatedButton(
@@ -88,7 +135,6 @@ class _PendingOrdersState extends State<PendingOrders> {
               child: const Text("Fetch Total Orders"),
             ),
           ),
-          // Display total orders
           Padding(
             padding: const EdgeInsets.all(8.0),
             child: Text(
@@ -98,121 +144,78 @@ class _PendingOrdersState extends State<PendingOrders> {
           ),
           Expanded(
             child: StreamBuilder<QuerySnapshot>(
-              // Stream to fetch all user documents from Firestore
-              stream: _firestore.collection('users').snapshots(),
-              builder: (context, userSnapshot) {
-                if (userSnapshot.connectionState == ConnectionState.waiting) {
+              stream: _firestore
+                  .collectionGroup('transactions')
+                  .where('adminId', isEqualTo: widget.adminId)
+                  .snapshots(),
+              builder: (context, transactionSnapshot) {
+                if (transactionSnapshot.connectionState ==
+                    ConnectionState.waiting) {
                   return const Center(child: CircularProgressIndicator());
                 }
 
-                if (!userSnapshot.hasData || userSnapshot.data!.docs.isEmpty) {
+                if (!transactionSnapshot.hasData ||
+                    transactionSnapshot.data!.docs.isEmpty) {
                   return const Center(child: Text('No transactions found.'));
                 }
 
-                final userDocs = userSnapshot.data!.docs;
+                final transactionDocs = transactionSnapshot.data!.docs;
 
                 return ListView.builder(
-                  itemCount: userDocs.length,
+                  itemCount: transactionDocs.length,
                   itemBuilder: (context, index) {
-                    final userDoc = userDocs[index];
-                    final userId = userDoc.id;
+                    final transactionDoc = transactionDocs[index];
+                    final transactionData =
+                        transactionDoc.data() as Map<String, dynamic>?;
 
-                    return StreamBuilder<QuerySnapshot>(
-                      // Stream to fetch transactions for the current user
-                      stream: _firestore
-                          .collection('users')
-                          .doc(userId)
-                          .collection('transactions')
-                          .orderBy('createdAt', descending: true)
-                          .snapshots(),
-                      builder: (context, transactionSnapshot) {
-                        if (transactionSnapshot.connectionState ==
-                            ConnectionState.waiting) {
-                          return const ListTile(
-                            title: Text("Loading transactions..."),
-                          );
+                    if (transactionData == null) {
+                      return const SizedBox();
+                    }
+
+                    final transactionId = transactionDoc.id;
+                    final userRef = transactionDoc.reference.parent.parent;
+
+                    return FutureBuilder<DocumentSnapshot>(
+                      future: userRef!.get(),
+                      builder: (context, userSnapshot) {
+                        if (!userSnapshot.hasData) {
+                          return const SizedBox();
                         }
 
-                        if (!transactionSnapshot.hasData ||
-                            transactionSnapshot.data!.docs.isEmpty) {
-                          return const SizedBox(); // Skip if no transactions
-                        }
+                        final userData =
+                            userSnapshot.data!.data() as Map<String, dynamic>?;
 
-                        final transactionDocs = transactionSnapshot.data!.docs;
+                        final username = userData?['name'] ?? 'Unknown';
+                        final email = userData?['email'] ?? 'Unknown';
+                        final transactionText =
+                            transactionData['transactionId'] ?? 'N/A';
+                        final createdAt = transactionData['createdAt'] != null
+                            ? (transactionData['createdAt'] as Timestamp)
+                                .toDate()
+                                .toString()
+                            : 'Unknown';
+                        final isVerified = transactionData['verified'];
 
-                        return Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Padding(
-                              padding: const EdgeInsets.all(8.0),
-                              child: Text(
-                                "User ID: $userId",
-                                style: const TextStyle(
-                                    fontSize: 18, fontWeight: FontWeight.bold),
+                        return ListTile(
+                          title: Text(
+                              "Transaction ID: $transactionText\nCreated At: $createdAt\nUsername: $username\nEmail: $email"),
+                          trailing: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              IconButton(
+                                icon: const Icon(Icons.check_circle,
+                                    color: Colors.green),
+                                onPressed: () => _updateTransactionStatus(
+                                    userRef.id, transactionId, true),
                               ),
-                            ),
-                            ...transactionDocs.map((transactionDoc) {
-                              // Ensure data is safely cast to a Map<String, dynamic>
-                              final transactionData = transactionDoc.data()
-                                  as Map<String, dynamic>?;
-
-                              if (transactionData == null) {
-                                return const SizedBox(); // Skip if data is null
-                              }
-
-                              final transactionId = transactionDoc.id;
-                              final transactionText =
-                                  transactionData['transactionId'] ?? 'N/A';
-                              final createdAt = transactionData['createdAt'] !=
-                                      null
-                                  ? (transactionData['createdAt'] as Timestamp)
-                                      .toDate()
-                                      .toString()
-                                  : 'Unknown';
-                              final isVerified =
-                                  transactionData['verified']; // Status field
-
-                              return ListTile(
-                                title: Row(
-                                  children: [
-                                    Expanded(
-                                      child: Text(
-                                        "Transaction ID: $transactionText\nCreated At: $createdAt",
-                                      ),
-                                    ),
-                                    if (isVerified == true)
-                                      const Icon(Icons.check_circle,
-                                          color: Colors.green) // Green Check
-                                    else if (isVerified == false)
-                                      const Icon(Icons.cancel,
-                                          color: Colors.red) // Red Cross
-                                    else
-                                      const SizedBox(), // No status yet
-                                  ],
-                                ),
-                                trailing: Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    // Green Button (Mark as Verified)
-                                    IconButton(
-                                      icon: const Icon(Icons.check_circle,
-                                          color: Colors.green),
-                                      onPressed: () => _updateTransactionStatus(
-                                          userId, transactionId, true),
-                                    ),
-                                    // Red Button (Mark as Rejected)
-                                    IconButton(
-                                      icon: const Icon(Icons.cancel,
-                                          color: Colors.red),
-                                      onPressed: () => _updateTransactionStatus(
-                                          userId, transactionId, false),
-                                    ),
-                                  ],
-                                ),
-                              );
-                            }),
-                            const Divider(),
-                          ],
+                              IconButton(
+                                icon:
+                                    const Icon(Icons.cancel, color: Colors.red),
+                                onPressed: () => _updateTransactionStatus(
+                                    userRef.id, transactionId, false),
+                              ),
+                            ],
+                          ),
                         );
                       },
                     );

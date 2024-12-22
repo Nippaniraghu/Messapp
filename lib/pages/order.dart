@@ -131,7 +131,13 @@ class _OrderPageState extends State<Order> {
     //Provider.of<CartModel>(context, listen: false).clearCart();
 
     // Navigate to the Wallet page
-    Navigator.of(context).pushReplacement(
+
+    // Navigator.of(context).pushReplacement(
+    //   MaterialPageRoute(
+    //     builder: (BuildContext context) => const Wallet(),
+    //   ),
+    // );
+    Navigator.of(context).push(
       MaterialPageRoute(
         builder: (BuildContext context) => const Wallet(),
       ),

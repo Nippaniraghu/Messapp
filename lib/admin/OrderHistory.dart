@@ -5,7 +5,7 @@ import 'package:flutter/material.dart';
 class OrderHistoryPage extends StatefulWidget {
   final String adminID;
 
-  const OrderHistoryPage({Key? key, required this.adminID}) : super(key: key);
+  const OrderHistoryPage({super.key, required this.adminID});
 
   @override
   _OrderHistoryPageState createState() => _OrderHistoryPageState();

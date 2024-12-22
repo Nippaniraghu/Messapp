@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:collegeproject/admin/DeleteItems.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
@@ -205,6 +206,7 @@ class _AddFoodState extends State<AddFood> {
                   buildTextField("Item Detail", detailcontroller, maxLines: 6),
                   const SizedBox(height: 20.0),
                   buildButton("Add", uploadItem),
+                  buildDeleteButton(),
                 ],
               ),
             ),
@@ -259,6 +261,41 @@ class _AddFoodState extends State<AddFood> {
             child: Center(
               child: Text(
                 label,
+                style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 22.0,
+                    fontWeight: FontWeight.bold),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget buildDeleteButton() {
+    return GestureDetector(
+      onTap: () {
+        // Navigate to DeleteItems page
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => DeleteItems(adminID: widget.adminID),
+          ),
+        );
+      },
+      child: Center(
+        child: Material(
+          elevation: 5.0,
+          borderRadius: BorderRadius.circular(10),
+          child: Container(
+            padding: const EdgeInsets.symmetric(vertical: 12.0),
+            width: 150,
+            decoration: BoxDecoration(
+                color: Colors.red, borderRadius: BorderRadius.circular(10)),
+            child: Center(
+              child: Text(
+                "Delete Items",
                 style: const TextStyle(
                     color: Colors.white,
                     fontSize: 22.0,

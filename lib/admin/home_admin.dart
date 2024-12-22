@@ -101,7 +101,7 @@ class HomeAdmin extends StatelessWidget {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (context) => const PendingOrders(),
+                      builder: (context) => PendingOrders(adminId: adminID),
                     ),
                   );
                 },
